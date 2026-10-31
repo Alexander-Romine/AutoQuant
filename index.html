@@ -1,0 +1,2235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- figma:head-start -->
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AutoQuant</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<!-- figma:head-end -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+  /* ==========================================================================
+     1. BASE SETUP & CSS VARIABLES
+     ========================================================================== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:             #04060d;
+    --bg-panel:       rgba(12, 16, 26, 0.65);
+    --bg-main:        transparent;
+    --bg-card:        rgba(16, 22, 36, 0.7);
+    --bg-card-hover:  rgba(24, 32, 52, 0.85);
+    --bg-card2:       #0e1324;
+    --bg-input:       rgba(10, 14, 24, 0.8);
+    --overlay-bg:     rgba(4, 6, 13, 0.75);
+
+    --border:         rgba(255, 255, 255, 0.06);
+    --border-hi:      rgba(255, 255, 255, 0.12);
+    --chart-grid:     rgba(255, 255, 255, 0.03);
+
+    --text:           #f1f5f9;
+    --text-dim:       #94a3b8;
+    --text-muted:     #64748b;
+
+    --purple:         #7c6aff;
+    --purple2:        #a78bfa;
+    --blue:           #38bdf8;
+    --blue-dim:       rgba(56, 189, 248, 0.15);
+    --green:          #34d399;
+    --green-dim:      rgba(52, 211, 153, 0.15);
+    --red:            #f87171;
+    --red-dim:        rgba(248, 113, 113, 0.15);
+    --amber:          #fbbf24;
+    --amber-dim:      rgba(251, 191, 36, 0.15);
+
+    --grad:           linear-gradient(135deg, #a78bfa, #38bdf8);
+    --grad-btn:       linear-gradient(135deg, #7c6aff, #2563eb);
+    --mono:           'DM Mono', monospace;
+    --sans:           'Inter', sans-serif;
+
+    --r-sm:           6px;
+    --r-md:           10px;
+    --r-lg:           16px;
+
+    --shadow-lg:      0 8px 40px rgba(0, 0, 0, 0.5);
+    --shadow-hover:   0 8px 24px rgba(0, 0, 0, 0.4);
+  }
+
+  body { color-scheme: dark; }
+
+  body.light-mode {
+    color-scheme: light;
+    --bg:             #ffffff;
+    --bg-panel:       #f8fafc;
+    --bg-card:        #ffffff;
+    --bg-card-hover:  #f1f5f9;
+    --bg-card2:       #ffffff;
+    --bg-input:       #ffffff;
+    --overlay-bg:     rgba(255, 255, 255, 0.8);
+
+    --border:         rgba(0, 0, 0, 0.06);
+    --border-hi:      rgba(0, 0, 0, 0.12);
+    --chart-grid:     rgba(0, 0, 0, 0.04);
+
+    --text:           #0f172a;
+    --text-dim:       #475569;
+    --text-muted:     #64748b;
+
+    --purple:         #6366f1;
+    --purple2:        #4f46e5;
+
+    --shadow-hover:   0 6px 16px rgba(0, 0, 0, 0.06);
+  }
+
+  html, body {
+    height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+    background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 13px; line-height: 1.5;
+    background-image: radial-gradient(ellipse at 15% 10%, rgba(124,106,255,0.08) 0%, transparent 60%),
+                      radial-gradient(ellipse at 85% 85%, rgba(56,189,248,0.06) 0%, transparent 60%);
+    transition: background-color 0.4s ease, color 0.4s ease;
+  }
+
+  body.light-mode { background-image: none; }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(124,106,255,0.15); border-radius: 6px; transition: background 0.2s; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(124,106,255,0.3); }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .animate-in { animation: fadeIn 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+  .hidden { display: none !important; }
+
+  /* ==========================================================================
+     2. UTILITY CLASSES
+     ========================================================================== */
+  .flex { display: flex; }
+  .flex-col { flex-direction: column; }
+  .items-center { align-items: center; }
+  .justify-center { justify-content: center; }
+  .justify-between { justify-content: space-between; }
+  .flex-wrap { flex-wrap: wrap; }
+  .flex-1 { flex: 1; }
+
+  .gap-xs { gap: 6px; }
+  .gap-sm { gap: 10px; }
+  .gap-md { gap: 16px; }
+
+  .text-center { text-align: center; }
+  .text-right { text-align: right; }
+
+  .font-mono { font-family: var(--mono); }
+  .font-medium { font-weight: 500; }
+  .font-semibold { font-weight: 600; }
+  .font-bold { font-weight: 700; }
+
+  .text-blue { color: var(--blue); }
+  .text-green { color: var(--green); }
+  .text-red { color: var(--red); }
+  .text-amber { color: var(--amber); }
+  .text-purple { color: var(--purple2); }
+  .text-muted { color: var(--text-muted); }
+  .text-dim { color: var(--text-dim); }
+
+  .opacity-50 { opacity: 0.5; }
+  .opacity-100 { opacity: 1; }
+  .transition-opacity { transition: opacity 0.2s ease; }
+
+  /* ==========================================================================
+     3. HEADER & TOOLBAR
+     ========================================================================== */
+  .app-header {
+    flex-shrink: 0; padding: 16px 24px; display: flex; align-items: center; gap: 16px;
+    background: var(--bg-panel); backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    z-index: 50; transition: background 0.4s; flex-wrap: wrap;
+  }
+  .app-header h1 { font-size: 16px; font-weight: 700; letter-spacing: -.01em; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; white-space: nowrap; margin-right: 12px; }
+
+  .live-badge { font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 20px; letter-spacing: .05em; text-transform: uppercase; transition: all 0.3s ease; white-space: nowrap; }
+  .live-badge.live { background: var(--green-dim); color: var(--green); border: 1px solid rgba(52,211,153,0.2); }
+  .live-badge.cached { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(56,189,248,0.2); }
+  .live-badge.none { background: rgba(255,255,255,0.04); color: var(--text-dim); border: 1px solid var(--border); }
+  .live-badge.error { background: var(--red-dim); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
+  body.light-mode .live-badge.none { background: rgba(0,0,0,0.04); }
+
+  .header-tools { margin-left: auto; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+
+  .api-bar-label { font-size: 10px; font-weight: 600; color: var(--text-muted); letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; }
+
+  .api-key-input {
+    width: 200px; background: var(--bg-input); border: 1px solid var(--border-hi);
+    border-radius: var(--r-sm); color: var(--text); font-family: var(--mono); font-size: 12px; padding: 7px 12px; outline: none; transition: all 0.2s ease;
+  }
+  .api-key-input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(124,106,255,0.15); background: var(--bg-card2); }
+
+  .api-key-status { font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .api-key-status.ok       { color: var(--green); }
+  .api-key-status.error    { color: var(--red); }
+  .api-key-status.none     { color: var(--text-muted); }
+  .api-key-status.checking { color: var(--amber); }
+
+  .api-link { font-size: 11px; font-weight: 500; color: var(--blue); text-decoration: none; white-space: nowrap; transition: opacity 0.2s; }
+  .api-link:hover { opacity: 0.75; }
+
+  .theme-toggle {
+    position: relative; width: 66px; height: 32px; border-radius: 32px; background: #0f172a;
+    cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 0 10px;
+    border: 1px solid rgba(255,255,255,0.05); flex-shrink: 0; transition: background 0.3s ease;
+  }
+  body.light-mode .theme-toggle { background: #e2e8f0; border-color: rgba(0,0,0,0.05); }
+
+  .theme-icon { width: 14px; height: 14px; stroke-width: 2.5px; fill: none; stroke: currentColor; }
+  .theme-toggle .sun-icon { color: #fbbf24; }
+  .theme-toggle .moon-icon { color: #64748b; }
+
+  .theme-knob {
+    position: absolute; top: 3px; left: 35px; width: 24px; height: 24px; border-radius: 50%;
+    background: #1e293b; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+  body.light-mode .theme-knob { left: 5px; background: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+
+  .knob-icon { width: 13px; height: 13px; stroke-width: 2.5px; fill: none; stroke: currentColor; position: absolute; transition: opacity 0.3s; }
+  .sun-knob { opacity: 0; color: #fbbf24; }
+  .moon-knob { opacity: 1; color: #94a3b8; }
+  body.light-mode .sun-knob { opacity: 1; }
+  body.light-mode .moon-knob { opacity: 0; }
+
+  .switch { position: relative; display: inline-block; width: 34px; height: 20px; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: var(--border-hi); transition: .3s; border-radius: 20px; }
+  .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background: var(--text-dim); transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+  input:checked + .slider { background: var(--purple); }
+  input:checked + .slider:before { transform: translateX(14px); background: #fff; }
+
+  /* ==========================================================================
+     4. PANELS & LAYOUT
+     ========================================================================== */
+  .layout { flex: 1; display: flex; flex-direction: row; overflow: hidden; }
+  .sidebar { flex: 0 0 420px; max-width: 100%; border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; background: var(--bg-panel); z-index: 40; transition: background 0.4s; }
+  .main-area { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow-y: auto; background: var(--bg-main); transition: background 0.4s; }
+
+  .panel { border-bottom: 1px solid var(--border); background: transparent; flex-shrink: 0; transition: background 0.3s ease; }
+  .panel:hover { background: rgba(255,255,255,0.01); }
+  body.light-mode .panel:hover { background: rgba(0,0,0,0.01); }
+
+  .panel-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.015); flex-wrap: wrap; gap: 8px; }
+  body.light-mode .panel-head { background: rgba(0,0,0,0.015); }
+
+  .panel-title { font-size: 11px; font-weight: 600; color: var(--text-dim); letter-spacing: .06em; text-transform: uppercase; }
+  .panel-body { padding: 16px 20px; }
+
+  @media (max-width: 900px) {
+    .layout { flex-direction: column; overflow: auto; }
+    .sidebar { flex: none; width: 100%; border-right: none; border-bottom: 1px solid var(--border); overflow-y: visible; }
+    .main-area { flex: none; width: 100%; overflow: visible; }
+    html, body { overflow: auto; height: auto; }
+  }
+
+  /* ==========================================================================
+     5. INPUTS & SEARCH
+     ========================================================================== */
+  .search-wrap { position: relative; }
+  .search-input, .field-input {
+    width: 100%; background: var(--bg-input); border: 1px solid var(--border-hi); border-radius: var(--r-sm); color: var(--text); font-family: var(--sans); font-size: 13px; padding: 10px 14px; outline: none; transition: all 0.2s ease;
+  }
+  .search-input:hover, .field-input:hover { border-color: var(--purple2); }
+  .field-input { padding: 8px 12px; }
+  .search-input:focus, .field-input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(124,106,255,0.15); background: var(--bg-card2); }
+  select.field-input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%238a9bb3' d='M5 7L0 2h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; cursor: pointer; }
+  .field-label { font-size: 10px; font-weight: 600; color: var(--text-dim); letter-spacing: .05em; text-transform: uppercase; margin-bottom: 6px; white-space: nowrap; }
+
+  .autocomplete { position: absolute; top: calc(100% + 8px); left: 0; right: 0; background: var(--bg-card2); border: 1px solid var(--border-hi); border-radius: var(--r-md); z-index: 200; max-height: 240px; overflow-y: auto; box-shadow: var(--shadow-lg); }
+  .autocomplete-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background .2s; }
+  .autocomplete-item:hover { background: rgba(124,106,255,0.08); }
+  .ac-ticker { font-family: var(--mono); font-weight: 600; color: var(--purple2); font-size: 12px; min-width: 52px; }
+  .ac-name   { color: var(--text); font-size: 12px; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
+  .ac-add    { font-size: 10px; font-weight: 600; color: var(--blue); padding: 3px 10px; background: var(--blue-dim); border-radius: 20px; flex-shrink: 0; transition: all 0.2s; }
+  .ac-loading{ padding: 14px; text-align: center; font-size: 12px; color: var(--text-muted); font-weight: 500; }
+  .autocomplete-item:hover .ac-add { transform: scale(1.05); background: var(--blue); color: #fff; box-shadow: 0 2px 8px rgba(56,189,248,0.4); }
+
+  /* ==========================================================================
+     6. TABLES & PORTFOLIO INPUTS
+     ========================================================================== */
+  .table-scroll { overflow-x: auto; width: 100%; overflow-y: hidden; padding-bottom: 4px; }
+  .ptable { width: 100%; border-collapse: collapse; min-width: 100%; }
+  .ptable th { font-size: 10px; font-weight: 600; color: var(--text-muted); letter-spacing: .06em; text-transform: uppercase; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  .ptable td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; transition: background 0.2s ease; }
+  .ptable tbody tr:hover td { background: var(--bg-card-hover); }
+
+  .t-sym  { font-family: var(--mono); font-weight: 700; font-size: 11px; color: var(--purple2); text-align: center; }
+  .t-name { color: var(--text-dim); font-size: 11px; max-width: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 400; }
+  .t-price{ font-family: var(--mono); font-size: 13px; color: var(--text); white-space: nowrap; font-weight: 500; }
+
+  .weight-input {
+    width: 56px; background: transparent; border: 1px solid transparent; border-radius: var(--r-sm);
+    color: var(--text); font-family: var(--mono); font-size: 13px; font-weight: 600;
+    padding: 6px 4px; text-align: center; outline: none; transition: all 0.2s ease; display: block; margin: 0 auto;
+  }
+  .weight-input:hover { background: var(--bg-input); border-color: var(--border-hi); }
+  body.light-mode .weight-input:hover { border-color: rgba(0,0,0,0.15); }
+  .weight-input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(124,106,255,0.15); background: var(--bg-card2); }
+
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+  .remove-btn { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 16px; padding: 4px; border-radius: var(--r-sm); transition: all 0.2s; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; margin-left: auto; }
+  .remove-btn:hover { color: var(--red); background: var(--red-dim); }
+
+  /* ==========================================================================
+     7. BUTTONS & COMPONENTS
+     ========================================================================== */
+  .btn { font-family: var(--sans); font-size: 12px; font-weight: 600; letter-spacing: .02em; padding: 10px 18px; border-radius: var(--r-sm); border: none; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; }
+  .btn:active:not(:disabled) { transform: scale(0.97); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  .btn-amber { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #000; box-shadow: 0 2px 10px rgba(251,191,36,0.15); }
+  .btn-amber:hover:not(:disabled) { opacity: .95; box-shadow: 0 4px 14px rgba(251,191,36,0.3); transform: translateY(-1px); }
+
+  .btn-blue { background: var(--grad-btn); color: #fff; box-shadow: 0 2px 10px rgba(99,102,241,0.2); }
+  .btn-blue:hover:not(:disabled) { opacity: .95; box-shadow: 0 4px 14px rgba(99,102,241,0.35); transform: translateY(-1px); }
+
+  .btn-ghost { background: rgba(255,255,255,0.04); border: 1px solid var(--border-hi); color: var(--text-dim); }
+  .btn-ghost:hover:not(:disabled) { background: rgba(255,255,255,0.08); color: var(--text); border-color: rgba(255,255,255,0.25); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+  body.light-mode .btn-ghost { background: transparent; border-color: var(--border-hi); }
+  body.light-mode .btn-ghost:hover:not(:disabled) { background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.15); color: var(--text); }
+
+  .btn-full { width: 100%; display: block; text-align: center; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 12px; margin-top: 12px; }
+  .stat-cell { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 14px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+  .stat-label { font-size: 9px; font-weight: 600; color: var(--text-muted); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 6px; }
+  .stat-value { font-family: var(--mono); font-size: 20px; font-weight: 700; color: var(--text); line-height: 1; }
+  .stat-value.pos { color: var(--green); }
+  .stat-value.amber { color: var(--amber); }
+
+  .alloc-bar { height: 4px; border-radius: 4px; background: rgba(255,255,255,0.08); margin: 12px 0 8px; overflow: hidden; }
+  body.light-mode .alloc-bar { background: rgba(0,0,0,0.08); }
+  .alloc-fill { height: 100%; border-radius: 4px; transition: width .6s cubic-bezier(0.2, 0.8, 0.2, 1), background .4s; }
+  .alloc-row { font-size: 11px; display: flex; justify-content: space-between; color: var(--text-dim); }
+
+  .empty-state { text-align: center; padding: 32px 16px; color: var(--text-muted); font-size: 13px; font-weight: 400; line-height: 1.8; opacity: 0.8; }
+  .chart-empty {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    padding: 24px; text-align: center;
+  }
+  .panel-empty {
+    min-height: 160px; display: flex; align-items: center; justify-content: center;
+    padding: 24px; text-align: center;
+  }
+  #corrMatrix { min-height: 120px; }
+  #corrMatrix .empty-state { width: 100%; min-height: 120px; display: flex; align-items: center; justify-content: center; }
+  .pie-row.is-empty .pie-canvas-wrap { display: none; }
+  .pie-row.is-empty .pie-legend { width: 100%; padding-right: 0; align-items: center; }
+
+  .mc-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 12px; margin-top: 16px; }
+  .mc-stat { background: transparent; border: 1px solid var(--border); border-radius: var(--r-sm); padding: 12px 14px; text-align: center; }
+  .mc-stat-label { font-size: 10px; font-weight: 600; color: var(--text-muted); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 6px; }
+  .mc-stat-val   { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--text); }
+
+  .chart-wrap { position: relative; height: 260px; margin-top: 16px; width: 100%; background: transparent; }
+
+  .pie-row { display: flex; align-items: center; justify-content: center; min-height: 160px; flex-wrap: wrap; gap: 20px; padding: 16px 0; }
+  .pie-canvas-wrap { flex-shrink: 0; }
+  .pie-legend { display: flex; flex-direction: column; justify-content: center; gap: 8px; max-height: 160px; overflow-y: auto; padding-right: 10px; }
+  .pie-legend-item { display: flex; align-items: center; gap: 10px; padding: 2px 0; }
+  .pie-swatch { width: 10px; height: 10px; border-radius: 4px; flex-shrink: 0; }
+  .pie-sym { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--text); min-width: 46px; }
+  .pie-pct { font-size: 12px; color: var(--text-dim); }
+
+  .computing-overlay { position: absolute; inset: 0; background: var(--overlay-bg); backdrop-filter: blur(4px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; border-radius: var(--r-lg); z-index: 10; }
+  .cmp-label { font-size: 12px; font-weight: 600; color: var(--purple2); letter-spacing: .12em; text-transform: uppercase; }
+
+  .spinner { width: 28px; height: 28px; border: 3px solid var(--border-hi); border-top-color: var(--purple); border-radius: 50%; animation: spin .75s cubic-bezier(0.5, 0.1, 0.4, 0.9) infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .tag-live, .tag-cached, .tag-sim {
+    font-size: 9px; padding: 3px 8px; border-radius: 20px; letter-spacing: .04em;
+    vertical-align: middle; border: 1px solid;
+  }
+  .tag-live   { font-weight: 700; color: var(--green);      background: var(--green-dim);           border-color: rgba(52,211,153,0.2); }
+  .tag-cached { font-weight: 700; color: var(--blue);       background: var(--blue-dim);            border-color: rgba(56,189,248,0.2); }
+  .tag-sim    { font-weight: 600; color: var(--text-muted); background: rgba(255,255,255,0.05);     border-color: var(--border); }
+  body.light-mode .tag-sim { background: rgba(0,0,0,0.05); }
+
+  .fetch-ind { display: inline-block; width: 10px; height: 10px; border: 2px solid var(--border-hi); border-top-color: var(--purple); border-radius: 50%; animation: spin .6s linear infinite; vertical-align: middle; }
+
+  .toast { position: fixed; bottom: 24px; right: 24px; z-index: 999; background: var(--bg-card2); border: 1px solid var(--border-hi); border-left: 4px solid var(--red); border-radius: var(--r-md); padding: 12px 18px; font-size: 13px; color: var(--text); font-weight: 500; max-width: 320px; box-shadow: var(--shadow-lg); animation: slideIn .35s ease; }
+  @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  .corr-cell { border-radius: 4px; font-family: var(--mono); font-weight: 600; transition: transform 0.2s ease, z-index 0.2s ease; cursor: default; display: flex; align-items: center; justify-content: center; }
+  .corr-cell:hover { transform: scale(1.08); z-index: 5; box-shadow: 0 2px 8px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.25); }
+  body.light-mode .corr-cell:hover { border: 1px solid rgba(0,0,0,0.2); }
+
+  #btSummary, #ddSummary { background: transparent !important; border-bottom: 1px dashed var(--border-hi); }
+  #savedPortfoliosList { display: flex; flex-direction: column; gap: 10px; max-height: 280px; overflow-y: auto; padding-right: 2px; }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <h1>AutoQuant</h1>
+  <span class="live-badge none" id="dataModeBadge">API KEY REQUIRED</span>
+
+  <div class="header-tools">
+    <span class="api-bar-label">Twelve Data Key</span>
+    <input class="api-key-input" id="apiKeyInput" type="password" placeholder="Paste free key from twelvedata.com" autocomplete="off" spellcheck="false" />
+    <span class="api-key-status none" id="apiKeyStatus">No key</span>
+    <a class="api-link" href="https://twelvedata.com/pricing" target="_blank" rel="noopener">Get free key ↗</a>
+
+    <label class="theme-toggle" title="Toggle Theme">
+      <input type="checkbox" id="lightModeSwitch" class="hidden">
+      <svg class="theme-icon sun-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      <svg class="theme-icon moon-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      <div class="theme-knob">
+         <svg class="knob-icon sun-knob" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+         <svg class="knob-icon moon-knob" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </div>
+    </label>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <!-- 1. Portfolio & Search -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="flex items-center gap-xs flex-wrap">
+            <span class="panel-title" style="margin-right:2px;">Portfolio</span>
+            <label class="flex items-center gap-xs text-dim font-medium" style="font-size:10px; cursor:pointer;" title="Reinvest Dividends">
+              <input type="checkbox" id="dripToggleSwitch" checked style="accent-color: var(--purple); width:12px; height:12px; margin:0;" />
+              DRIP
+            </label>
+            <label class="flex items-center gap-xs text-dim font-medium" style="font-size:10px; cursor:pointer;" title="Enable margin leverage for this portfolio">
+              <input type="checkbox" id="currentLeverageToggle" style="accent-color: var(--amber); width:12px; height:12px; margin:0;" />
+              <span>Lev</span>
+            </label>
+            <div id="currentLevWrap" class="hidden flex items-center gap-xs" style="font-size:10px;">
+              <input type="number" id="currentLevMultiplierInput" value="2.0" min="0.1" max="10" step="0.1" class="field-input font-mono" style="width:42px; padding:2px 3px; font-size:10px; height:18px;" title="Leverage Multiplier (e.g. 1.5, 2.0, 3.0)" />
+              <span class="text-amber font-semibold">x</span>
+              <span class="text-muted">@</span>
+              <input type="number" id="currentBorrowRateInput" value="7.0" min="0" max="30" step="0.25" class="field-input font-mono" style="width:44px; padding:2px 3px; font-size:10px; height:18px;" title="Borrow APR (%)" />
+              <span class="text-muted">%</span>
+            </div>
+        </div>
+        <div class="flex gap-sm">
+          <button class="btn btn-ghost" style="padding:4px 8px;font-size:10px;" onclick="clearPortfolio()">Clear</button>
+        </div>
+      </div>
+      <div style="padding: 16px 20px 0;">
+        <div class="search-wrap" id="searchWrap">
+          <input class="search-input" id="searchInput" type="text" placeholder="Search symbol to add..." autocomplete="off" spellcheck="false" />
+          <div class="autocomplete hidden" id="autocomplete"></div>
+        </div>
+      </div>
+      <div id="portfolioEmpty" class="empty-state">Search and add tickers<br/>to build your portfolio</div>
+      <div id="portfolioTableWrap" class="hidden animate-in">
+        <div class="table-scroll" style="margin-top: 8px;">
+          <table class="ptable" id="portfolioTable">
+            <thead>
+              <tr>
+                <th class="text-center">Sym</th>
+                <th class="text-right">Price</th>
+                <th class="text-right">Chg%</th>
+                <th class="text-center">Wt%</th>
+                <th style="width:24px;"></th>
+              </tr>
+            </thead>
+            <tbody id="portfolioBody"></tbody>
+          </table>
+        </div>
+        <div style="padding:8px 20px 16px;">
+          <div class="alloc-bar"><div class="alloc-fill" id="allocFill"></div></div>
+          <div class="alloc-row">
+            <span id="allocLabel">—</span>
+            <span id="allocTotal" class="font-semibold">0%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Saved Portfolios -->
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">Saved Portfolios</span>
+      </div>
+      <div class="panel-body">
+        <div class="flex gap-sm" style="margin-bottom:12px;">
+          <input class="field-input flex-1" type="text" id="savePtfName" placeholder="Name current..." />
+          <button class="btn btn-blue" onclick="saveCurrentPortfolio()" style="padding: 8px 12px;">Save</button>
+        </div>
+        <div id="savedPortfoliosList"></div>
+      </div>
+    </div>
+
+    <!-- 3. Allocation Pie Chart -->
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">Allocation</span></div>
+      <div class="pie-row animate-in is-empty" id="pieRow">
+        <div class="pie-canvas-wrap"><canvas id="pieChart" width="150" height="150"></canvas></div>
+        <div class="pie-legend" id="pieLegend"><div class="pie-empty text-muted">No holdings</div></div>
+      </div>
+      <div class="stats-grid" id="allocationStats" style="grid-template-columns:repeat(3,1fr); margin:0 20px 16px;">
+        <div class="stat-cell" style="padding:10px;">
+          <div class="stat-label">Expected Return</div>
+          <div class="stat-value pos" id="allocationReturn" style="font-size:15px;">—</div>
+        </div>
+        <div class="stat-cell" style="padding:10px;">
+          <div class="stat-label">Avg Drawdown</div>
+          <div class="stat-value" id="allocationDrawdown" style="font-size:15px; color:var(--red);">—</div>
+        </div>
+        <div class="stat-cell" style="padding:10px;">
+          <div class="stat-label">Volatility</div>
+          <div class="stat-value amber" id="allocationVolatility" style="font-size:15px;">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Optimizer -->
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">Portfolio Optimizer</span></div>
+      <div class="panel-body">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+          <div style="grid-column: span 2; display: flex; gap: 12px;">
+            <div class="flex-1">
+              <div class="field-label">Target Metric</div>
+              <select class="field-input" id="optimizerMetric">
+                <option value="sharpe" selected>Max Sharpe</option>
+                <option value="min_vol">Min Volatility</option>
+                <option value="pe">Value (Inverse P/E)</option>
+                <option value="peg">GARP (Inverse PEG)</option>
+                <option value="ebitda">Size (EV/EBITDA)</option>
+              </select>
+            </div>
+            <div style="width: 80px;">
+              <div class="field-label">Max Wt %</div>
+              <input class="field-input font-mono" type="number" id="optMaxWeight" value="100" min="5" max="100" step="5" />
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-amber btn-full" id="optimizeBtn" onclick="runOptimization()">Optimize Portfolio</button>
+        <div id="optimizerComputing" class="hidden" style="text-align:center;padding:16px 0;font-size:12px;font-weight:600;color:var(--purple2);letter-spacing:.05em;">
+          <div class="spinner" style="margin:0 auto 10px;"></div>OPTIMIZING…
+        </div>
+        <div id="optimizerResults" class="hidden animate-in">
+          <div class="stats-grid" id="optimizerStats"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Monte Carlo -->
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">Monte Carlo</span></div>
+      <div class="panel-body">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+          <div>
+            <div class="field-label">Start ($)</div>
+            <input class="field-input font-mono" type="number" id="startingValue" value="10000" min="100" step="100" />
+          </div>
+          <div>
+            <div class="field-label">Years</div>
+            <select class="field-input" id="mcHorizon">
+              <option value="5" selected>5 yr</option>
+              <option value="10">10 yr</option>
+              <option value="20">20 yr</option>
+            </select>
+          </div>
+          <div>
+            <div class="field-label">Sims</div>
+            <select class="field-input" id="mcSims">
+              <option value="10000" selected>10 K</option>
+              <option value="20000">20 K</option>
+              <option value="50000">50 K</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-blue btn-full" onclick="runMonteCarlo()">Run Monte Carlo</button>
+      </div>
+    </div>
+
+    <!-- 6. Managed Strategy Config -->
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">Managed Strategy</span>
+        <label class="switch" title="Enable dynamic rebalancing based on rules">
+          <input type="checkbox" id="enableManagedStrategy" onchange="toggleManagedStrategy()">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="panel-body hidden" id="managedStrategyBody">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <div class="field-label">Target Metric</div>
+            <select class="field-input" id="managedMetric" onchange="renderBacktest()">
+              <option value="sharpe" selected>Max Sharpe</option>
+              <option value="min_vol">Min Volatility</option>
+              <option value="momentum">Momentum (1Y)</option>
+              <option value="equal">Equal Wt</option>
+              <option value="pe">Value (P/E)</option>
+              <option value="peg">GARP (PEG)</option>
+              <option value="ebitda">Size (EBITDA)</option>
+            </select>
+          </div>
+          <div>
+            <div class="field-label">Rebalance</div>
+            <select class="field-input" id="managedCadence" onchange="renderBacktest()">
+              <option value="21">Monthly</option>
+              <option value="63" selected>Quarterly</option>
+              <option value="252">Annually</option>
+            </select>
+          </div>
+          <div style="grid-column: span 2;">
+            <div class="field-label">Max Allowable Weight (%)</div>
+            <input class="field-input font-mono" type="number" id="managedMaxW" value="100" min="5" max="100" step="5" onchange="renderBacktest()" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. Diversification Heatmap -->
+    <div class="panel" style="border-bottom: none;">
+      <div class="panel-head">
+        <span class="panel-title">Diversification Heatmap</span>
+        <label class="switch" title="Show/Hide Heatmap">
+          <input type="checkbox" id="enableHeatmap" onchange="toggleHeatmap()">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="panel-body hidden" id="heatmapBody" style="padding-top: 12px; padding-bottom: 24px; overflow-x:hidden;">
+        <div id="corrMatrix" class="flex-col w-full gap-xs">
+           <div class="empty-state" style="padding:16px;">Add at least 2 valid active tickers to see correlations.</div>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- MAIN AREA -->
+  <main class="main-area">
+
+    <!-- 1. Historical Backtest Chart -->
+    <div class="panel flex-col" style="flex:1; min-height: 380px;">
+      <div class="panel-head">
+        <div class="flex items-center gap-sm">
+          <span class="panel-title">Historical Backtest ($10k Start)</span>
+        </div>
+        <div class="flex items-center flex-wrap gap-md">
+          <div class="flex gap-xs">
+            <button class="btn btn-ghost btn-range" data-range="1y" style="padding:5px 10px; font-size:11px;" onclick="setBacktestRange('1y')">1 Year</button>
+            <button class="btn btn-ghost btn-range" data-range="3y" style="padding:5px 10px; font-size:11px;" onclick="setBacktestRange('3y')">3 Year</button>
+            <button class="btn btn-ghost btn-range" data-range="5y" style="padding:5px 10px; font-size:11px;" onclick="setBacktestRange('5y')">5 Year</button>
+            <button class="btn btn-ghost btn-range" data-range="10y" style="padding:5px 10px; font-size:11px;" onclick="setBacktestRange('10y')">10 Year</button>
+          </div>
+          <div class="flex items-center gap-xs">
+            <span class="field-label" style="margin-bottom:0; text-transform:none; font-size:11px;">From:</span>
+            <input class="field-input font-mono" type="date" id="btStartDate" style="padding:5px 8px; font-size:11px; width:125px;" onchange="onCustomDateChange(this.value)" />
+          </div>
+        </div>
+      </div>
+
+      <div id="btSummary" class="flex flex-wrap items-center font-mono font-semibold" style="font-size:12px; gap:12px; padding:10px 20px;"></div>
+
+      <div class="panel-body flex-1" style="position:relative;">
+        <div id="btPlaceholder" class="chart-empty flex-col text-muted font-medium opacity-100 transition-opacity" style="gap:10px; font-size:13px;">
+          Allocate weights or check "Compare" on a saved portfolio to view performance.
+        </div>
+        <div id="btChartWrap" class="hidden animate-in chart-wrap" style="margin-top:0; height:100%; min-height:220px;">
+          <canvas id="btChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Historical Drawdown Comparison Chart -->
+    <div class="panel flex-col" style="min-height: 270px;">
+      <div class="panel-head">
+        <span class="panel-title">Historical Drawdown Comparison</span>
+      </div>
+      <div id="ddSummary" class="flex flex-wrap items-center font-mono font-semibold" style="font-size:11px; gap:12px; padding:10px 20px;"></div>
+      <div class="panel-body flex-1" style="position:relative;">
+        <div id="ddPlaceholder" class="chart-empty text-muted opacity-100 transition-opacity" style="font-size:13px;">
+          Run backtest to view drawdowns and comparative risk.
+        </div>
+        <div id="ddChartWrap" class="hidden animate-in chart-wrap" style="margin-top:0; height:100%; min-height:180px;">
+          <canvas id="ddChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Monte Carlo Projections Chart -->
+    <div class="panel flex-col" style="flex:1; min-height: 380px;">
+      <div class="panel-head">
+        <span class="panel-title">Monte Carlo Projections (Current Portfolio)</span>
+        <span id="mcSubtitle" class="font-mono text-muted font-medium" style="font-size:10px;">—</span>
+      </div>
+      <div class="panel-body flex-1" style="position:relative;">
+        <div id="mcPlaceholder" class="chart-empty text-muted opacity-100 transition-opacity" style="font-size:13px;">
+          Run Monte Carlo simulation to view projections
+        </div>
+        <div id="mcChartWrap" class="hidden animate-in">
+          <div class="chart-wrap" style="height: 220px; margin-top:0;">
+            <canvas id="mcChart"></canvas>
+            <div class="computing-overlay hidden" id="mcComputing">
+              <div class="spinner"></div><span class="cmp-label">Simulating…</span>
+            </div>
+          </div>
+          <div class="mc-stats" id="mcStats"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Analytics Table -->
+    <div class="panel" style="border-bottom: none;">
+      <div class="panel-head">
+        <span class="panel-title">Holdings Analytics & Advanced Risk</span>
+        <button class="btn btn-ghost" style="padding:4px 10px; font-size:10px;" onclick="exportCSV()">Export CSV</button>
+      </div>
+      <div id="analyticsEmpty" class="empty-state panel-empty">No holdings yet</div>
+      <div id="analyticsWrap" class="hidden animate-in table-scroll">
+        <table class="ptable" style="min-width:1150px;">
+          <thead>
+            <tr>
+              <th class="text-center">Symbol</th>
+              <th style="text-align:left;">Name</th>
+              <th>Src</th>
+              <th class="text-right">Yield</th>
+              <th class="text-right">P/E</th>
+              <th class="text-right">PEG</th>
+              <th class="text-right">1Y</th>
+              <th class="text-right">3Y</th>
+              <th class="text-right">5Y</th>
+              <th class="text-right">Ann. Ret</th>
+              <th class="text-right">Ann. Vol</th>
+              <th class="text-right">Sharpe</th>
+              <th class="text-right">Sortino</th>
+              <th class="text-right">Max DD</th>
+              <th class="text-center">Wt%</th>
+            </tr>
+          </thead>
+          <tbody id="analyticsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+if (typeof Chart !== 'undefined') Chart.defaults.backgroundColor = 'transparent';
+
+// Storage helpers
+const storage = {
+  get: (k) => { try { return window.localStorage.getItem(k); } catch(e) { return null; } },
+  set: (k, v) => { try { window.localStorage.setItem(k, v); } catch(e) {} }
+};
+
+// Web Worker — GBM Monte Carlo simulation with per-portfolio Leverage
+const workerCode = `
+self.onmessage = function(e) {
+  const { startVal, years, sims, portReturn, portVol, dripEnabled, portDivYield, leverage, borrowRate } = e.data;
+  const dt = 1/252;
+  const steps = years * 252;
+  const lev = leverage || 1.0;
+  const rBorrow = borrowRate || 0.07;
+
+  const effMu = lev * portReturn - (lev - 1) * rBorrow;
+  const effVol = lev * portVol;
+  const muDt = (effMu - 0.5 * effVol * effVol) * dt;
+  const sigDt = effVol * Math.sqrt(dt);
+
+  const checkpoints = Array.from({length: years}, (_, i) => Math.round((i + 1) * 252));
+  const cpVals = checkpoints.map(() => []);
+  const finalVals = new Float64Array(sims);
+
+  for (let sim = 0; sim < sims; sim++) {
+    let val = startVal; let cash = 0; let cpIdx = 0;
+    for (let d = 1; d <= steps; d++) {
+      if (val <= 0) {
+        val = 0;
+        if (cpIdx < checkpoints.length && d === checkpoints[cpIdx]) { cpVals[cpIdx].push(cash); cpIdx++; }
+        continue;
+      }
+      let u1 = Math.random(); let u2 = Math.random();
+      if (u1 === 0) u1 = 1e-10;
+      const z = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+      val *= Math.exp(muDt + sigDt * z);
+      if (!dripEnabled) cash += (val * lev) * portDivYield * dt;
+      if (cpIdx < checkpoints.length && d === checkpoints[cpIdx]) { cpVals[cpIdx].push(Math.max(0, val + cash)); cpIdx++; }
+    }
+    finalVals[sim] = Math.max(0, val + cash);
+  }
+
+  cpVals.forEach(arr => arr.sort((a,b) => a - b));
+  finalVals.sort();
+  const pct = (arr, p) => arr[Math.max(0, Math.floor(p * arr.length / 100) - 1)];
+
+  self.postMessage({
+    p10Data: [startVal, ...cpVals.map(a => pct(a, 10))],
+    p50Data: [startVal, ...cpVals.map(a => pct(a, 50))],
+    p90Data: [startVal, ...cpVals.map(a => pct(a, 90))],
+    stats: { min: finalVals[0], p10: pct(finalVals, 10), median: pct(finalVals, 50), p90: pct(finalVals, 90), max: finalVals[finalVals.length-1] }
+  });
+};`;
+
+let mcWorker = null;
+try {
+  mcWorker = new Worker(URL.createObjectURL(new Blob([workerCode], {type: 'application/javascript'})));
+} catch(e) {
+  console.warn("Background worker restricted. Using synchronous fallback.");
+}
+
+// State
+let portfolio = [];
+let savedPortfolios = [];
+let marketDataCache = {};
+
+let currentPortfolioConfig = {
+  leverage: false,
+  leverageMultiplier: 2.0,
+  borrowRate: 0.07
+};
+
+let searchTimer = null;
+let keyValidateTimer = null;
+let pieChartInst = null;
+let mcChartInst = null;
+let btChartInst = null;
+let ddChartInst = null;
+
+let btSelectedRange = '5y';
+let btCustomStartDate = null;
+let dripEnabled = true;
+let RISK_FREE_RATE = 0.042;
+
+const PIE_COLORS = ['#34d399','#38bdf8','#7c6aff','#f87171','#fbbf24','#a78bfa','#06b6d4','#10b981','#fb923c','#e879f9'];
+
+const dom = {
+    lightModeSwitch:             document.getElementById('lightModeSwitch'),
+    dripToggleSwitch:            document.getElementById('dripToggleSwitch'),
+    currentLeverageToggle:       document.getElementById('currentLeverageToggle'),
+    currentLevMultiplierInput:   document.getElementById('currentLevMultiplierInput'),
+    currentBorrowRateInput:      document.getElementById('currentBorrowRateInput'),
+    currentLevWrap:              document.getElementById('currentLevWrap'),
+    enableManagedSwitch:         document.getElementById('enableManagedStrategy'),
+    managedStrategyBody:         document.getElementById('managedStrategyBody'),
+    enableHeatmapSwitch:         document.getElementById('enableHeatmap'),
+    heatmapBody:                 document.getElementById('heatmapBody')
+};
+
+// Theme, DRIP & Leverage Event Handlers
+dom.lightModeSwitch.addEventListener('change', (e) => {
+  document.body.classList.toggle('light-mode', e.target.checked);
+  storage.set('theme', e.target.checked ? 'light' : 'dark');
+  if (mcChartInst) runMonteCarlo();
+  if (pieChartInst) renderPie();
+  renderBacktest();
+});
+
+dom.dripToggleSwitch.addEventListener('change', (e) => {
+  dripEnabled = e.target.checked;
+  storage.set('drip_enabled', dripEnabled);
+  updateAllViews();
+  if (mcChartInst) runMonteCarlo();
+});
+
+dom.currentLeverageToggle.addEventListener('change', (e) => {
+  currentPortfolioConfig.leverage = e.target.checked;
+  dom.currentLevWrap.classList.toggle('hidden', !currentPortfolioConfig.leverage);
+  storage.set('cur_lev_enabled', currentPortfolioConfig.leverage);
+  updateAllViews();
+  if (mcChartInst) runMonteCarlo();
+});
+
+dom.currentLevMultiplierInput.addEventListener('change', (e) => {
+  const val = parseFloat(e.target.value);
+  currentPortfolioConfig.leverageMultiplier = (!isNaN(val) && val > 0) ? val : 2.0;
+  storage.set('cur_lev_multiplier', currentPortfolioConfig.leverageMultiplier);
+  updateAllViews();
+  if (mcChartInst) runMonteCarlo();
+});
+
+dom.currentBorrowRateInput.addEventListener('change', (e) => {
+  const val = parseFloat(e.target.value);
+  currentPortfolioConfig.borrowRate = (!isNaN(val) && val >= 0) ? val / 100 : 0.07;
+  storage.set('cur_borrow_rate', currentPortfolioConfig.borrowRate);
+  updateAllViews();
+  if (mcChartInst) runMonteCarlo();
+});
+
+function toggleManagedStrategy() {
+  dom.managedStrategyBody.classList.toggle('hidden', !dom.enableManagedSwitch.checked);
+  renderBacktest();
+}
+function toggleHeatmap() {
+  dom.heatmapBody.classList.toggle('hidden', !dom.enableHeatmapSwitch.checked);
+}
+
+// Restore saved settings
+if (storage.get('theme') === 'light') { document.body.classList.add('light-mode'); dom.lightModeSwitch.checked = true; }
+if (storage.get('drip_enabled') === 'false') { dripEnabled = false; dom.dripToggleSwitch.checked = false; }
+if (storage.get('cur_lev_enabled') === 'true') {
+  currentPortfolioConfig.leverage = true;
+  dom.currentLeverageToggle.checked = true;
+  dom.currentLevWrap.classList.remove('hidden');
+}
+const savedCurMult = storage.get('cur_lev_multiplier');
+if (savedCurMult) {
+  currentPortfolioConfig.leverageMultiplier = parseFloat(savedCurMult) || 2.0;
+  dom.currentLevMultiplierInput.value = currentPortfolioConfig.leverageMultiplier.toFixed(1);
+}
+const savedCurBorrow = storage.get('cur_borrow_rate');
+if (savedCurBorrow) {
+  currentPortfolioConfig.borrowRate = parseFloat(savedCurBorrow);
+  dom.currentBorrowRateInput.value = (currentPortfolioConfig.borrowRate * 100).toFixed(1);
+}
+
+function getCssVar(name) { return getComputedStyle(document.body).getPropertyValue(name).trim(); }
+
+function debounce(func, wait) {
+  let t;
+  return function(...args) { clearTimeout(t); t = setTimeout(() => func.apply(this, args), wait); };
+}
+
+const saveState = debounce(() => {
+  storage.set('portfolio_state', JSON.stringify(portfolio.map(p => ({ s: p.symbol, n: p.name, w: p.weight }))));
+}, 500);
+
+function fetchRiskFreeRate() {
+  const cached = storage.get('rf_rate_cache');
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      if (Date.now() - parsed.ts < 30 * 24 * 60 * 60 * 1000) { RISK_FREE_RATE = parsed.rate; return; }
+    } catch(e) {}
+  }
+  RISK_FREE_RATE = 0.042;
+  storage.set('rf_rate_cache', JSON.stringify({ rate: 0.042, ts: Date.now() }));
+}
+
+function getFromLocalCache(symbol) {
+  try {
+    const raw = storage.get(`td_cache_${symbol}`);
+    if (!raw) return null;
+    const c = JSON.parse(raw);
+    c.data.priceMap = new Map(c.data.priceMapEntries);
+    return c;
+  } catch(e) { return null; }
+}
+
+const mkPending = (sym, name, w = 0) => ({
+  symbol: sym, name: name || sym, weight: w,
+  price: null, changePercent: null, returns: null,
+  closes: null, dates: null, priceMap: null,
+  divYield: 0, dataSource: 'pending', loading: true
+});
+
+async function loadMissingItems(items) {
+  await Promise.all(items.map(async p => {
+    const data = await loadSymbolData(p.symbol);
+    marketDataCache[p.symbol] = data;
+    Object.assign(p, data);
+    p.loading = false;
+  }));
+}
+
+async function loadState() {
+  savedPortfolios = JSON.parse(storage.get('saved_portfolios') || '[]').map(p => ({
+    leverage: false,
+    leverageMultiplier: 2.0,
+    borrowRate: 0.07,
+    ...p
+  }));
+  renderSavedPortfolios();
+
+  const saved = storage.get('portfolio_state');
+  if (!saved) return;
+
+  portfolio = JSON.parse(saved).map(p => {
+    const cached = getFromLocalCache(p.s);
+    if (cached && cached.data) {
+      marketDataCache[p.s] = cached.data;
+      return { symbol: p.s, name: cached.data.name || p.n, weight: p.w, ...cached.data, loading: false };
+    }
+    return mkPending(p.s, p.n, p.w);
+  });
+
+  updateAllViews();
+
+  const missing = portfolio.filter(p => p.loading || !p.returns);
+  if (missing.length > 0) { await loadMissingItems(missing); updateAllViews(); }
+}
+
+// API Integration
+let apiKey = '';
+const apiInput  = document.getElementById('apiKeyInput');
+const apiStatus = document.getElementById('apiKeyStatus');
+const modeBadge = document.getElementById('dataModeBadge');
+const TD_BASE = 'https://api.twelvedata.com';
+
+async function validateApiKey(key) {
+  if (!key || key.length < 10) return false;
+  try {
+    const res = await fetch(`${TD_BASE}/quote?symbol=AAPL&apikey=${encodeURIComponent(key)}`);
+    if (!res.ok) return false;
+    const data = await res.json();
+    if (data.code === 401 || data.code === 403 || data.status === 'error') return false;
+    return true;
+  } catch { return false; }
+}
+
+function setApiKeyStatus(state, msg) {
+  apiStatus.textContent = msg;
+  apiStatus.className = `api-key-status ${state}`;
+  const map = {
+    ok:       ['LIVE · Twelve Data', 'live'],
+    error:    ['INVALID KEY',        'error'],
+    checking: ['VALIDATING…',        'cached'],
+  };
+  const [text, cls] = map[state] || [apiKey ? 'CACHED / NO KEY' : 'API KEY REQUIRED', 'none'];
+  modeBadge.textContent = text;
+  modeBadge.className = `live-badge ${cls}`;
+}
+
+function setApiKey(key) {
+  apiKey = key.trim();
+  storage.set('td_key', apiKey);
+
+  if (!apiKey) { setApiKeyStatus('none', 'No key'); return; }
+  setApiKeyStatus('checking', 'Checking…');
+
+  clearTimeout(keyValidateTimer);
+  keyValidateTimer = setTimeout(async () => {
+    const valid = await validateApiKey(apiKey);
+    if (apiKey !== key.trim()) return;
+    if (valid) {
+      setApiKeyStatus('ok', '● Connected');
+      const pending = portfolio.filter(p => !p.returns || p.dataSource === 'n/a');
+      if (pending.length > 0) {
+        await Promise.all(pending.map(async p => {
+          const data = await loadSymbolData(p.symbol, true);
+          marketDataCache[p.symbol] = data;
+          Object.assign(p, data);
+          p.loading = false;
+        }));
+        updateAllViews();
+      }
+    } else {
+      setApiKeyStatus('error', '✕ Invalid key');
+    }
+  }, 800);
+}
+
+apiInput.addEventListener('input', () => setApiKey(apiInput.value));
+
+async function tdFetch(path) {
+  const res = await fetch(TD_BASE + path);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  if (data.status === 'error' || data.code === 401 || data.code === 429) throw new Error(data.message || `API error ${data.code}`);
+  return data;
+}
+
+function getMockFundamentals(sym) {
+  let h = 0;
+  for(let i = 0; i < sym.length; i++) h = Math.imul(31, h) + sym.charCodeAt(i) | 0;
+  const rng = () => { h = (h * 1664525 + 1013904223) | 0; return (h >>> 0) / 4294967296; };
+
+  const hardcodedYields = {
+    'SPY':0.013,'VOO':0.013,'QQQ':0.006,'AAPL':0.005,'MSFT':0.008,
+    'NVDA':0.0002,'AMZN':0.0,'GOOGL':0.0,'META':0.002,'TSLA':0.0,
+    'BRK.B':0.0,'JNJ':0.03,'XOM':0.033,'PG':0.024,'KO':0.031,
+    'HD':0.025,'JPM':0.023,'V':0.007,'UNH':0.015,'MA':0.005,
+    'COST':0.006,'AMD':0.0,'CRM':0.0,'GLD':0.0,'TLT':0.038,
+    'BA':0.0,'GS':0.024,'CAT':0.018,'ABBV':0.038
+  };
+  return {
+    pe: 10 + rng() * 30, peg: 0.5 + rng() * 2.5, ebitda: 1e9 + rng() * 100e9,
+    divYield: hardcodedYields[sym] !== undefined ? hardcodedYields[sym] : rng() * 0.04
+  };
+}
+
+async function fetchRealFundamentals(symbol) {
+  try {
+    const url = `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=defaultKeyStatistics,financialData,summaryDetail`;
+    const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) throw new Error('Proxy fail');
+    const result = (await res.json()).quoteSummary.result[0];
+    return {
+      pe:       result.summaryDetail?.trailingPE?.raw || result.summaryDetail?.forwardPE?.raw || null,
+      peg:      result.defaultKeyStatistics?.pegRatio?.raw || null,
+      ebitda:   result.financialData?.ebitda?.raw || null,
+      divYield: result.summaryDetail?.trailingAnnualDividendYield?.raw || result.summaryDetail?.dividendYield?.raw || 0
+    };
+  } catch(e) { return getMockFundamentals(symbol); }
+}
+
+async function loadSymbolData(symbol, forceRefresh = false) {
+  const cacheKey = `td_cache_${symbol}`;
+  const cached = getFromLocalCache(symbol);
+
+  if (!forceRefresh && cached && Date.now() - cached.timestamp < 7 * 24 * 60 * 60 * 1000) {
+    return cached.data;
+  }
+
+  if (apiKey) {
+    try {
+      const [ts, quote, fundamentals] = await Promise.all([
+        tdFetch(`/time_series?symbol=${encodeURIComponent(symbol)}&interval=1day&outputsize=2520&order=ASC&apikey=${apiKey}`),
+        tdFetch(`/quote?symbol=${encodeURIComponent(symbol)}&apikey=${apiKey}`),
+        fetchRealFundamentals(symbol)
+      ]);
+
+      const values = ts.values;
+      if (!values || values.length < 30) throw new Error('Insufficient history');
+
+      const dates = values.map(v => v.datetime.split(' ')[0]);
+      const closes = values.map(v => parseFloat(v.close));
+      const returns = [];
+      for (let i = 1; i < closes.length; i++) returns.push((closes[i] - closes[i-1]) / closes[i-1]);
+
+      const priceMap = new Map();
+      for (let i = 0; i < dates.length; i++) priceMap.set(dates[i], closes[i]);
+
+      const t0 = new Date(values[0].datetime).getTime() / 1000;
+      const t1 = new Date(values[values.length-1].datetime).getTime() / 1000;
+      const price = parseFloat(quote.close);
+      const prev  = parseFloat(quote.previous_close);
+
+      const dataToReturn = {
+        returns, closes, dates, priceMap, price,
+        changePercent: prev ? ((price - prev) / prev) * 100 : null,
+        name: quote.name || symbol,
+        pe: fundamentals.pe, peg: fundamentals.peg,
+        ebitda: fundamentals.ebitda, divYield: fundamentals.divYield,
+        _spanYears: (t1 - t0) / (365.25 * 86400),
+        dataSource: 'live'
+      };
+
+      try {
+        const cacheObj = { timestamp: Date.now(), data: { ...dataToReturn, priceMapEntries: Array.from(priceMap.entries()) } };
+        delete cacheObj.data.priceMap;
+        storage.set(cacheKey, JSON.stringify(cacheObj));
+        cacheObj.data.priceMap = priceMap;
+      } catch(e) {}
+
+      return dataToReturn;
+    } catch(e) {
+      if (cached && cached.data) { showToast(`${symbol}: Using cached data (${e.message})`); return { ...cached.data, dataSource: 'cached' }; }
+      showToast(`${symbol}: ${e.message}`);
+      return { returns: null, closes: null, dates: null, priceMap: null, divYield: 0, dataSource: 'n/a' };
+    }
+  } else {
+    if (cached && cached.data) return { ...cached.data, dataSource: 'cached' };
+    showToast(`API Key required to fetch data for ${symbol}`);
+    return { returns: null, closes: null, dates: null, priceMap: null, divYield: 0, dataSource: 'n/a' };
+  }
+}
+
+async function retryTicker(symbol) {
+  const p = portfolio.find(x => x.symbol === symbol);
+  if (!p) return;
+  p.loading = true;
+  updateAllViews();
+  marketDataCache[symbol] = await loadSymbolData(symbol, true);
+  Object.assign(p, marketDataCache[symbol]);
+  p.loading = false;
+  updateAllViews();
+}
+
+async function searchTD(q) {
+  const data = await tdFetch(`/symbol_search?symbol=${encodeURIComponent(q)}&apikey=${apiKey}`);
+  return (data.data || []).filter(r => r.instrument_type === 'Common Stock' || r.instrument_type === 'ETF').slice(0, 8);
+}
+
+// Portfolio CRUD
+function saveCurrentPortfolio() {
+  const nameInput = document.getElementById('savePtfName');
+  const name = nameInput.value.trim() || `Portfolio ${savedPortfolios.length + 1}`;
+  if (portfolio.length === 0) return showToast("Cannot save an empty portfolio");
+
+  const assets = portfolio.filter(p => p.weight > 0).map(p => ({ symbol: p.symbol, weight: p.weight }));
+  if (assets.length === 0) return showToast("No active weights allocated to save.");
+
+  savedPortfolios.push({
+    name,
+    assets,
+    leverage: currentPortfolioConfig.leverage,
+    leverageMultiplier: currentPortfolioConfig.leverageMultiplier || 2.0,
+    borrowRate: currentPortfolioConfig.borrowRate
+  });
+  storage.set('saved_portfolios', JSON.stringify(savedPortfolios));
+  nameInput.value = '';
+  renderSavedPortfolios();
+}
+
+function deleteSavedPortfolio(idx) {
+  savedPortfolios.splice(idx, 1);
+  storage.set('saved_portfolios', JSON.stringify(savedPortfolios));
+  renderSavedPortfolios();
+  renderBacktest();
+}
+
+function toggleSavedLeverage(idx, isChecked) {
+  savedPortfolios[idx].leverage = isChecked;
+  storage.set('saved_portfolios', JSON.stringify(savedPortfolios));
+  renderSavedPortfolios();
+  renderBacktest();
+}
+
+function updateSavedLeverageMultiplier(idx, multVal) {
+  const parsed = parseFloat(multVal);
+  savedPortfolios[idx].leverageMultiplier = (!isNaN(parsed) && parsed > 0) ? parsed : 2.0;
+  storage.set('saved_portfolios', JSON.stringify(savedPortfolios));
+  renderBacktest();
+}
+
+function updateSavedBorrowRate(idx, rateVal) {
+  const parsed = parseFloat(rateVal);
+  savedPortfolios[idx].borrowRate = (!isNaN(parsed) && parsed >= 0) ? parsed / 100 : 0.07;
+  storage.set('saved_portfolios', JSON.stringify(savedPortfolios));
+  renderBacktest();
+}
+
+async function loadSavedPortfolio(idx) {
+  const ptf = savedPortfolios[idx];
+  currentPortfolioConfig.leverage = !!ptf.leverage;
+  currentPortfolioConfig.leverageMultiplier = ptf.leverageMultiplier || 2.0;
+  currentPortfolioConfig.borrowRate = ptf.borrowRate || 0.07;
+
+  dom.currentLeverageToggle.checked = currentPortfolioConfig.leverage;
+  dom.currentLevWrap.classList.toggle('hidden', !currentPortfolioConfig.leverage);
+  dom.currentLevMultiplierInput.value = currentPortfolioConfig.leverageMultiplier.toFixed(1);
+  dom.currentBorrowRateInput.value = (currentPortfolioConfig.borrowRate * 100).toFixed(1);
+
+  portfolio = ptf.assets.map(a => {
+    const cached = getFromLocalCache(a.symbol);
+    if (cached && cached.data) { marketDataCache[a.symbol] = cached.data; return { symbol: a.symbol, name: a.symbol, weight: a.weight, ...cached.data, loading: false }; }
+    return mkPending(a.symbol, a.symbol, a.weight);
+  });
+  updateAllViews();
+  const missing = portfolio.filter(p => p.loading);
+  if (missing.length > 0) { await loadMissingItems(missing); updateAllViews(); }
+}
+
+function renderSavedPortfolios() {
+  const list = document.getElementById('savedPortfoliosList');
+  if (!savedPortfolios.length) {
+    list.innerHTML = `<div class="text-center text-muted font-mono" style="font-size:11px;">No saved portfolios.</div>`;
+    return;
+  }
+  list.innerHTML = savedPortfolios.map((ptf, idx) => `
+    <div style="background:var(--bg-card); border:1px solid var(--border-hi); border-radius:var(--r-sm); padding:10px; display:flex; flex-direction:column; gap:8px;">
+      <div class="flex justify-between items-center flex-wrap gap-xs">
+        <span class="font-semibold" style="font-size:12px;">${escHtml(ptf.name)}</span>
+        <label class="flex items-center gap-xs cursor-pointer text-dim" style="font-size:10px;">
+          <input type="checkbox" class="compare-cb" data-idx="${idx}" onchange="renderBacktest()" /> Compare
+        </label>
+      </div>
+
+      <div class="flex items-center justify-between text-dim" style="font-size:10px; background:rgba(255,255,255,0.02); padding:4px 6px; border-radius:4px; flex-wrap:wrap; gap:6px;">
+        <div class="flex items-center gap-xs">
+          <label class="flex items-center gap-xs cursor-pointer">
+            <input type="checkbox" style="accent-color:var(--amber); width:12px; height:12px;" ${ptf.leverage ? 'checked' : ''} onchange="toggleSavedLeverage(${idx}, this.checked)" />
+            <span class="${ptf.leverage ? 'text-amber font-semibold' : ''}">Lev:</span>
+          </label>
+          <input type="number" value="${(ptf.leverageMultiplier ?? 2.0).toFixed(1)}" min="0.1" max="10" step="0.1" class="field-input font-mono" style="width:38px; padding:2px 3px; font-size:10px; height:18px;" onchange="updateSavedLeverageMultiplier(${idx}, this.value)" ${ptf.leverage ? '' : 'disabled'} />
+          <span class="text-amber">x</span>
+        </div>
+        <div class="flex items-center gap-xs ${ptf.leverage ? '' : 'opacity-50'}">
+          <span>Borrow:</span>
+          <input type="number" value="${((ptf.borrowRate ?? 0.07) * 100).toFixed(1)}" min="0" max="30" step="0.25" class="field-input font-mono" style="width:40px; padding:2px 3px; font-size:10px; height:18px;" onchange="updateSavedBorrowRate(${idx}, this.value)" ${ptf.leverage ? '' : 'disabled'} />
+          <span>%</span>
+        </div>
+      </div>
+
+      <div class="flex gap-sm">
+        <button class="btn btn-ghost flex-1" style="padding:4px 0; font-size:10px;" onclick="loadSavedPortfolio(${idx})">Load</button>
+        <button class="btn btn-ghost text-red" style="padding:4px 8px; font-size:10px;" onclick="deleteSavedPortfolio(${idx})">×</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateAllViews() { renderPortfolio(); renderAnalytics(); renderPie(); renderCorrelation(); renderBacktest(); saveState(); }
+
+async function addTicker(symbol, name) {
+  symbol = symbol.toUpperCase().trim();
+  if (portfolio.find(p => p.symbol === symbol)) { clearSearch(); return; }
+
+  const cached = getFromLocalCache(symbol);
+  if (cached && cached.data) {
+    marketDataCache[symbol] = cached.data;
+    portfolio.push({ symbol, name: name || symbol, weight: 0, ...cached.data, loading: false });
+    equalWeight();
+    clearSearch();
+  } else {
+    const entry = mkPending(symbol, name || symbol);
+    portfolio.push(entry);
+    equalWeight();
+    clearSearch();
+    const data = await loadSymbolData(symbol);
+    marketDataCache[symbol] = data;
+    Object.assign(entry, data);
+    entry.loading = false;
+    updateAllViews();
+  }
+}
+
+function removeTicker(symbol) {
+  portfolio = portfolio.filter(p => p.symbol !== symbol);
+  if (portfolio.length) equalWeight(); else updateAllViews();
+}
+
+function clearPortfolio() { portfolio = []; updateAllViews(); }
+
+function equalWeight() {
+  if (!portfolio.length) return;
+  const w = parseFloat((100 / portfolio.length).toFixed(2));
+  portfolio.forEach(p => p.weight = w);
+  portfolio[portfolio.length - 1].weight = parseFloat((100 - w * (portfolio.length - 1)).toFixed(2));
+  updateAllViews();
+}
+
+function getAllocTotal() { return portfolio.reduce((s, p) => s + (parseFloat(p.weight) || 0), 0); }
+
+function updateWeight(symbol, val) {
+  const p = portfolio.find(x => x.symbol === symbol);
+  if (p) p.weight = parseFloat(val) || 0;
+  updateAllViews();
+}
+
+// Rendering
+function renderPortfolio() {
+  const empty = document.getElementById('portfolioEmpty');
+  const wrap  = document.getElementById('portfolioTableWrap');
+  const body  = document.getElementById('portfolioBody');
+
+  if (!portfolio.length) { empty.classList.remove('hidden'); wrap.classList.add('hidden'); return; }
+  empty.classList.add('hidden');
+  wrap.classList.remove('hidden');
+
+  body.innerHTML = portfolio.map(p => {
+    let priceHTML;
+    if (p.loading) priceHTML = '<span class="fetch-ind"></span>';
+    else if (p.dataSource === 'n/a') priceHTML = `<button class="btn btn-ghost text-blue" style="padding:2px 6px; font-size:10px;" onclick="retryTicker('${p.symbol}')">↻ Retry</button>`;
+    else priceHTML = '$' + (p.price ? p.price.toFixed(2) : '—');
+
+    const chgStr = p.changePercent != null
+      ? `<span class="${p.changePercent >= 0 ? 'text-green' : 'text-red'} font-medium">${p.changePercent >= 0 ? '+' : ''}${p.changePercent.toFixed(2)}%</span>`
+      : '<span class="text-muted font-medium">—</span>';
+
+    return `
+      <tr class="${p.loading ? 'opacity-50' : 'opacity-100'} transition-opacity">
+        <td class="t-sym text-center">${p.symbol}</td>
+        <td class="t-price">${priceHTML}</td>
+        <td class="t-price" style="text-align:right;">${chgStr}</td>
+        <td><input class="weight-input" type="number" min="0" max="100" step="0.1" value="${p.weight}" onchange="updateWeight('${p.symbol}',this.value)" onfocus="this.select()" /></td>
+        <td><button class="remove-btn" onclick="removeTicker('${p.symbol}')" title="Remove"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg></button></td>
+      </tr>`;
+  }).join('');
+
+  const total = getAllocTotal();
+  const fill  = document.getElementById('allocFill');
+  const label = document.getElementById('allocLabel');
+  fill.style.width = Math.min(total, 100) + '%';
+  document.getElementById('allocTotal').textContent = total.toFixed(2) + '%';
+
+  if (Math.abs(total - 100) < 0.01) {
+    fill.style.background = 'var(--green)'; fill.style.boxShadow = '0 0 10px rgba(52,211,153,0.4)'; label.textContent = 'Fully allocated';
+  } else if (total < 100) {
+    fill.style.background = 'var(--amber)'; fill.style.boxShadow = '0 0 10px rgba(251,191,36,0.4)'; label.textContent = `Under ${(100-total).toFixed(2)}%`;
+  } else {
+    fill.style.background = 'var(--red)'; fill.style.boxShadow = '0 0 10px rgba(248,113,113,0.4)'; label.textContent = `Over ${(total-100).toFixed(2)}%`;
+  }
+}
+
+function renderPie() {
+  const legend = document.getElementById('pieLegend');
+  const canvas = document.getElementById('pieChart');
+  const row = document.getElementById('pieRow');
+  const activePort = portfolio.filter(p => p.weight > 0);
+  renderAllocationStats(activePort);
+
+  if (!activePort.length) {
+    if (pieChartInst) pieChartInst.destroy();
+    row.classList.add('is-empty');
+    legend.innerHTML = '<div class="text-center text-muted font-mono" style="font-size:11px;">No holdings</div>';
+    return;
+  }
+
+  row.classList.remove('is-empty');
+  const colors = activePort.map((_, i) => PIE_COLORS[i % PIE_COLORS.length]);
+  if (pieChartInst) pieChartInst.destroy();
+
+  pieChartInst = new Chart(canvas.getContext('2d'), {
+    type: 'doughnut',
+    data: { labels: activePort.map(p => p.symbol), datasets: [{ data: activePort.map(p => Math.max(parseFloat(p.weight)||0, 0)), backgroundColor: colors, borderColor: getCssVar('--bg-panel'), borderWidth: 3, hoverOffset: 6 }] },
+    options: {
+      responsive: false, cutout: '68%',
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: getCssVar('--bg-card2'), borderColor: getCssVar('--border-hi'), borderWidth: 1, titleColor: '#a78bfa', bodyColor: getCssVar('--text'), cornerRadius: 8, padding: 12, callbacks: { label: ctx => ` ${ctx.parsed.toFixed(2)}%` } }
+      }
+    }
+  });
+
+  legend.innerHTML = activePort.map((p, i) => `
+    <div class="pie-legend-item">
+      <div class="pie-swatch" style="background:${PIE_COLORS[i % PIE_COLORS.length]};"></div>
+      <span class="pie-sym">${p.symbol}</span>
+      <span class="pie-pct">${(parseFloat(p.weight)||0).toFixed(1)}%</span>
+    </div>`).join('');
+}
+
+function renderAllocationStats(activePort) {
+  const returnEl = document.getElementById('allocationReturn');
+  const drawdownEl = document.getElementById('allocationDrawdown');
+  const volatilityEl = document.getElementById('allocationVolatility');
+  const ready = activePort.filter(p => !p.loading && p.priceMap && p.dates);
+
+  if (!ready.length) {
+    returnEl.textContent = drawdownEl.textContent = volatilityEl.textContent = '—';
+    return;
+  }
+
+  const commonDates = ready[0].dates.filter(d => ready.every(p => p.priceMap.has(d)));
+  if (commonDates.length < 2) {
+    returnEl.textContent = drawdownEl.textContent = volatilityEl.textContent = '—';
+    return;
+  }
+
+  const lev = currentPortfolioConfig.leverage ? (currentPortfolioConfig.leverageMultiplier || 2) : 1;
+  const borrowDrag = currentPortfolioConfig.leverage ? ((lev - 1) * currentPortfolioConfig.borrowRate) / 252 : 0;
+  const dailyReturns = [];
+
+  for (let i = 1; i < commonDates.length; i++) {
+    const dailyPortfolioReturn = ready.reduce((sum, asset) => {
+      const previous = asset.priceMap.get(commonDates[i - 1]);
+      const current = asset.priceMap.get(commonDates[i]);
+      const priceReturn = previous ? (current - previous) / previous : 0;
+      const dividendReturn = dripEnabled ? (asset.divYield || 0) / 252 : 0;
+      return sum + ((parseFloat(asset.weight) || 0) / 100) * (priceReturn + dividendReturn);
+    }, 0);
+    dailyReturns.push(lev * dailyPortfolioReturn - borrowDrag);
+  }
+
+  const logReturns = dailyReturns.map(r => Math.log(1 + Math.max(r, -0.999)));
+  const meanLog = logReturns.reduce((sum, r) => sum + r, 0) / logReturns.length;
+  const expectedReturn = Math.exp(meanLog * 252) - 1;
+  const variance = logReturns.reduce((sum, r) => sum + Math.pow(r - meanLog, 2), 0) / logReturns.length;
+  const volatility = Math.sqrt(variance * 252);
+
+  let value = 1;
+  let peak = 1;
+  let drawdownSum = 0;
+  dailyReturns.forEach(r => {
+    value *= 1 + r;
+    peak = Math.max(peak, value);
+    drawdownSum += (value - peak) / peak;
+  });
+  const averageDrawdown = drawdownSum / dailyReturns.length;
+
+  returnEl.textContent = `${expectedReturn >= 0 ? '+' : ''}${(expectedReturn * 100).toFixed(2)}%`;
+  returnEl.className = `stat-value ${expectedReturn >= 0 ? 'pos' : 'text-red'}`;
+  drawdownEl.textContent = `${(averageDrawdown * 100).toFixed(2)}%`;
+  volatilityEl.textContent = `${(volatility * 100).toFixed(2)}%`;
+}
+
+// Computes statistics for current portfolio holdings (reflecting customized leverage multiplier)
+function annualStats(entry, rfRate = 0) {
+  const r = entry.returns;
+  if (!r || !r.length) return { annReturn:0, annVol:0, sharpe:0, sortino:0, maxDd:0, spanYears:0 };
+
+  const n = r.length;
+  const lev = currentPortfolioConfig.leverage ? (currentPortfolioConfig.leverageMultiplier || 2.0) : 1.0;
+  const borrowDrag = currentPortfolioConfig.leverage ? ((lev - 1) * currentPortfolioConfig.borrowRate) / 252 : 0;
+  const dailyYield = (entry.divYield || 0) / 252;
+
+  const levReturns = r.map(ri => {
+    const rawDaily = dripEnabled ? ri + dailyYield : ri;
+    return lev * rawDaily - borrowDrag;
+  });
+
+  const logR = levReturns.map(ri => Math.log(1 + Math.max(ri, -0.999)));
+  const meanLog = logR.reduce((a,b) => a+b, 0) / n;
+  const annReturn = Math.exp(meanLog * 252) - 1;
+
+  const varLog = logR.reduce((a,b) => a + Math.pow(b - meanLog, 2), 0) / n;
+  const annVol = Math.sqrt(varLog * 252);
+  const sharpe = annVol > 0 ? (annReturn - rfRate) / annVol : 0;
+
+  const dailyRf = Math.pow(1 + rfRate, 1/252) - 1;
+  const downVol = Math.sqrt(levReturns.reduce((sum, ri) => { const d = ri - dailyRf; return sum + (d < 0 ? d*d : 0); }, 0) / n * 252);
+  const sortino = downVol > 0 ? (annReturn - rfRate) / downVol : 0;
+
+  let maxDd = 0;
+  let simulatedVal = 1.0;
+  let peak = 1.0;
+  for(let i = 0; i < levReturns.length; i++) {
+    simulatedVal *= (1 + levReturns[i]);
+    if (simulatedVal > peak) peak = simulatedVal;
+    const dd = (peak - simulatedVal) / peak;
+    if (dd > maxDd) maxDd = dd;
+    if (simulatedVal <= 0) { maxDd = 1.0; break; }
+  }
+
+  return { annReturn, annVol, sharpe, sortino, maxDd, spanYears: entry._spanYears || n/252 };
+}
+
+function getPeriodChange(entry, years) {
+  const closes = entry.closes;
+  if (!closes || closes.length < 2) return null;
+
+  const targetIdx = Math.max(0, closes.length - 1 - Math.floor(years * 252));
+  if (targetIdx < -15) return null;
+
+  let val = 1.0, cash = 0;
+  const lev = currentPortfolioConfig.leverage ? (currentPortfolioConfig.leverageMultiplier || 2.0) : 1.0;
+  const borrowDrag = currentPortfolioConfig.leverage ? ((lev - 1) * currentPortfolioConfig.borrowRate) / 252 : 0;
+  const dailyYield = (entry.divYield || 0) / 252;
+
+  for(let i = Math.max(0, targetIdx) + 1; i < closes.length; i++) {
+    const dRet = (closes[i] - closes[i-1]) / closes[i-1];
+    if (dripEnabled) {
+      val *= (1 + lev * (dRet + dailyYield) - borrowDrag);
+    } else {
+      cash += (val * lev) * dailyYield;
+      val *= (1 + lev * dRet - borrowDrag);
+    }
+    if (val <= 0) { val = 0; break; }
+  }
+  return (val + cash - 1) * 100;
+}
+
+function renderAnalytics() {
+  const empty = document.getElementById('analyticsEmpty');
+  const wrap  = document.getElementById('analyticsWrap');
+  const body  = document.getElementById('analyticsBody');
+  const rf    = RISK_FREE_RATE;
+
+  if (!portfolio.length) { empty.classList.remove('hidden'); wrap.classList.add('hidden'); return; }
+  empty.classList.add('hidden');
+  wrap.classList.remove('hidden');
+
+  const fmtChg = (v) => v == null
+    ? '<span class="text-muted">N/A</span>'
+    : `<span class="${v>=0?'text-green':'text-red'} font-medium">${v>=0?'+':''}${v.toFixed(2)}%</span>`;
+
+  body.innerHTML = portfolio.map(p => {
+    if (p.loading) return `<tr><td class="t-sym text-center">${p.symbol}</td><td colspan="13" class="text-muted font-mono" style="font-size:11px;">Loading…</td></tr>`;
+
+    if (!p.returns) return `
+      <tr>
+        <td class="t-sym text-center">${p.symbol}</td>
+        <td class="t-name">${escHtml(p.name)}</td>
+        <td><span class="tag-sim">N/A</span></td>
+        <td colspan="10" class="text-right text-muted font-mono">N/A</td>
+        <td class="text-center font-mono text-purple font-semibold" style="padding-right:20px;">${p.weight.toFixed(2)}%</td>
+      </tr>`;
+
+    const { annReturn, annVol, sharpe, sortino, maxDd, spanYears } = annualStats(p, rf);
+    const srcTag = p.dataSource === 'live'
+      ? `<span class="tag-live">LIVE ${spanYears>=1 ? spanYears.toFixed(1)+'yr' : Math.round(spanYears*12)+'mo'}</span>`
+      : `<span class="tag-cached">CACHED</span>`;
+
+    return `
+      <tr>
+        <td class="t-sym text-center">${p.symbol}</td>
+        <td class="t-name">${escHtml(p.name)}</td>
+        <td>${srcTag}</td>
+        <td class="text-right font-mono text-blue font-medium">${((p.divYield||0)*100).toFixed(2)}%</td>
+        <td class="text-right font-mono">${p.pe ? p.pe.toFixed(1) : 'N/A'}</td>
+        <td class="text-right font-mono">${p.peg ? p.peg.toFixed(2) : 'N/A'}</td>
+        <td class="text-right font-mono">${fmtChg(getPeriodChange(p,1))}</td>
+        <td class="text-right font-mono">${fmtChg(getPeriodChange(p,3))}</td>
+        <td class="text-right font-mono">${fmtChg(getPeriodChange(p,5))}</td>
+        <td class="text-right font-mono font-medium ${annReturn>=0?'text-green':'text-red'}">${(annReturn*100).toFixed(2)}%</td>
+        <td class="text-right font-mono font-medium">${(annVol*100).toFixed(2)}%</td>
+        <td class="text-right font-mono font-semibold ${sharpe>=1?'text-green':sharpe>=0.5?'text-amber':'text-red'}">${sharpe.toFixed(3)}</td>
+        <td class="text-right font-mono font-semibold ${sortino>=1.2?'text-green':sortino>=0.6?'text-amber':'text-red'}">${sortino.toFixed(3)}</td>
+        <td class="text-right font-mono font-medium text-red">-${(maxDd*100).toFixed(1)}%</td>
+        <td class="text-center font-mono font-semibold text-purple" style="padding-right:20px;">${p.weight.toFixed(2)}%</td>
+      </tr>`;
+  }).join('');
+}
+
+function exportCSV() {
+  if (!portfolio.length) return showToast("No data to export");
+  const rf = RISK_FREE_RATE;
+  const rows = [["Symbol","Name","Yield","P/E","PEG","1Y","3Y","5Y","Ann. Ret","Ann. Vol","Sharpe","Sortino","Max DD","Wt%"].join(",")];
+  portfolio.forEach(p => {
+    if (!p.returns) return;
+    const s = annualStats(p, rf);
+    const [y1, y3, y5] = [1, 3, 5].map(y => getPeriodChange(p, y));
+    rows.push([
+      p.symbol, `"${p.name}"`, `${((p.divYield||0)*100).toFixed(2)}%`,
+      p.pe ? p.pe.toFixed(1) : 'N/A', p.peg ? p.peg.toFixed(2) : 'N/A',
+      y1 ? y1.toFixed(2)+'%' : 'N/A', y3 ? y3.toFixed(2)+'%' : 'N/A', y5 ? y5.toFixed(2)+'%' : 'N/A',
+      (s.annReturn*100).toFixed(2)+'%', (s.annVol*100).toFixed(2)+'%',
+      s.sharpe.toFixed(3), s.sortino.toFixed(3), `-${(s.maxDd*100).toFixed(1)}%`, `${p.weight.toFixed(2)}%`
+    ].join(","));
+  });
+  const link = document.createElement("a");
+  link.setAttribute("href", encodeURI("data:text/csv;charset=utf-8," + rows.join("\n")));
+  link.setAttribute("download", "portfolio_analytics.csv");
+  document.body.appendChild(link); link.click(); document.body.removeChild(link);
+}
+
+function covariance(a, b) {
+  const n = Math.min(a.length, b.length);
+  const ma = a.reduce((s,v) => s+v, 0) / n;
+  const mb = b.reduce((s,v) => s+v, 0) / n;
+  let c = 0;
+  for (let i = 0; i < n; i++) c += (a[i] - ma) * (b[i] - mb);
+  return c / n;
+}
+
+function renderCorrelation() {
+  const wrap  = document.getElementById('corrMatrix');
+  const ready = portfolio.filter(p => p.returns && !p.loading && p.weight > 0);
+
+  if (ready.length < 2) {
+    wrap.innerHTML = '<div class="empty-state" style="padding:16px;">Add at least 2 valid active tickers to see correlations.</div>';
+    return;
+  }
+
+  const n = ready.length;
+  const minLen   = Math.min(...ready.map(p => p.returns.length));
+  const alignedR = ready.map(p => p.returns.slice(p.returns.length - minLen));
+  const fontSize = Math.max(9, Math.min(12, 120/n));
+
+  let html = `<div style="display:grid;grid-template-columns:repeat(${n+1},1fr);gap:2px;width:100%;aspect-ratio:1/1;">`;
+  html += `<div></div>`;
+  ready.forEach(p => { html += `<div class="flex items-center justify-center font-mono font-bold text-dim overflow-hidden" style="font-size:${fontSize}px;">${p.symbol}</div>`; });
+
+  for (let i = 0; i < n; i++) {
+    html += `<div class="flex items-center justify-center font-mono font-bold text-dim overflow-hidden" style="font-size:${fontSize}px;">${ready[i].symbol}</div>`;
+    for (let j = 0; j < n; j++) {
+      let corr = 1.0;
+      if (i !== j) {
+        const cov  = covariance(alignedR[i], alignedR[j]);
+        const varI = covariance(alignedR[i], alignedR[i]);
+        const varJ = covariance(alignedR[j], alignedR[j]);
+        corr = (varI > 0 && varJ > 0) ? cov / Math.sqrt(varI * varJ) : 0;
+      }
+      const h     = corr >= 0 ? 120 - (corr * 120) : 120 + (Math.abs(corr) * 60);
+      const s     = 60 + 30 * Math.abs(corr);
+      const alpha = 0.2 + 0.8 * Math.abs(corr);
+      const color = Math.abs(corr) > 0.4 ? '#fff' : 'var(--text-dim)';
+      html += `<div class="corr-cell flex items-center justify-center" style="background:hsla(${h},${s}%,50%,${alpha});color:${color};font-size:${fontSize}px;" title="${ready[i].symbol} & ${ready[j].symbol}: ${corr.toFixed(3)}">${corr.toFixed(2)}</div>`;
+    }
+  }
+  html += '</div>';
+  wrap.innerHTML = html;
+}
+
+// Backtest & Optimizer
+function setBacktestRange(range) { btSelectedRange = range; btCustomStartDate = null; renderBacktest(); }
+function onCustomDateChange(val) { if (!val) return; btSelectedRange = 'custom'; btCustomStartDate = val; renderBacktest(); }
+
+function getOptimalWeights(metric, returnsMatrix, fundamentals, rf, maxW) {
+  const n = returnsMatrix.length;
+
+  const projectWeights = (w, limit) => {
+    let wr = [...w];
+    if (limit * n < 1.0) limit = 1.0 / n;
+    for(let i = 0; i < n; i++) { if (wr[i] < 0) wr[i] = 0; }
+    let diff = 1;
+    for(let iter = 0; iter < 20 && diff > 1e-5; iter++) {
+      let sum = wr.reduce((a,b) => a+b, 0);
+      if(sum === 0) { wr.fill(1/n); break; }
+      wr = wr.map(v => v / sum);
+      let excess = 0; let countUnder = 0;
+      for(let i = 0; i < n; i++) {
+        if (wr[i] > limit) { excess += wr[i] - limit; wr[i] = limit; }
+        else if (wr[i] < limit) countUnder++;
+      }
+      if (excess < 1e-5) break;
+      if (countUnder > 0) { const add = excess / countUnder; for(let i = 0; i < n; i++) { if (wr[i] < limit) wr[i] += add; } }
+      diff = excess;
+    }
+    return wr;
+  };
+
+  if (metric === 'equal')    return Array(n).fill(1 / n);
+  if (metric === 'pe')       return projectWeights(fundamentals.map(a => 1 / Math.max(a.pe || 1, 1)), maxW);
+  if (metric === 'peg')      return projectWeights(fundamentals.map(a => 1 / Math.max(a.peg || 0.5, 0.2)), maxW);
+  if (metric === 'ebitda')   return projectWeights(fundamentals.map(a => Math.log(Math.max(a.ebitda || 1e6, 1e6))), maxW);
+  if (metric === 'momentum') return projectWeights(returnsMatrix.map(r => Math.max(r.reduce((acc, v) => acc * (1 + v), 1) - 1, 0)), maxW);
+
+  const Sigma = Array.from({length: n}, (_, i) => Array.from({length: n}, (_, j) => covariance(returnsMatrix[i], returnsMatrix[j]) * 252));
+  for (let i = 0; i < n; i++) Sigma[i][i] += 1e-5;
+
+  if (metric === 'min_vol') {
+    return projectWeights(returnsMatrix.map(r => 1 / Math.max(covariance(r, r) * 252, 1e-4)), maxW);
+  }
+
+  if (metric === 'sharpe') {
+    const mu = returnsMatrix.map(r => Math.exp(r.reduce((s, v) => s + Math.log(1 + Math.max(v, -0.999)), 0) / r.length * 252) - 1);
+    let weights = Array(n).fill(1 / n);
+    const lr = 0.05;
+    for (let iter = 0; iter < 400; iter++) {
+      let pRet = 0; for (let i = 0; i < n; i++) pRet += weights[i] * mu[i];
+      let pVar = 0; const Sw = Array(n).fill(0);
+      for (let i = 0; i < n; i++) { for (let j = 0; j < n; j++) Sw[i] += Sigma[i][j] * weights[j]; pVar += weights[i] * Sw[i]; }
+      const pVol = Math.sqrt(Math.max(pVar, 1e-8));
+      const excess = pRet - rf;
+      const grad = Array(n).fill(0);
+      for (let i = 0; i < n; i++) {
+        grad[i] = excess > 0 ? (mu[i] * pVol - (excess / pVol) * Sw[i]) / Math.max(pVar, 1e-6) : -Sw[i];
+        weights[i] += lr * grad[i];
+      }
+      weights = projectWeights(weights, maxW);
+    }
+    return weights;
+  }
+  return Array(n).fill(1 / n);
+}
+
+async function renderBacktest() {
+  const wrap         = document.getElementById('btChartWrap');
+  const placeholder  = document.getElementById('btPlaceholder');
+  const ddWrap       = document.getElementById('ddChartWrap');
+  const ddPlaceholder= document.getElementById('ddPlaceholder');
+  const summaryEl    = document.getElementById('btSummary');
+  const ddSummaryEl  = document.getElementById('ddSummary');
+  const dateInput    = document.getElementById('btStartDate');
+
+  document.querySelectorAll('.btn-range').forEach(b => {
+    b.classList.toggle('btn-amber', b.dataset.range === btSelectedRange);
+    b.classList.toggle('btn-ghost', b.dataset.range !== btSelectedRange);
+  });
+
+  const toPlot = [];
+  const currentAssets = portfolio.filter(p => p.weight > 0);
+  if (currentAssets.length > 0) {
+    toPlot.push({
+      name: 'Current Portfolio',
+      assets: currentAssets,
+      leverage: currentPortfolioConfig.leverage,
+      leverageMultiplier: currentPortfolioConfig.leverageMultiplier || 2.0,
+      borrowRate: currentPortfolioConfig.borrowRate
+    });
+  }
+
+  document.querySelectorAll('.compare-cb').forEach(cb => {
+    if (cb.checked) {
+      const idx = cb.getAttribute('data-idx');
+      const p = savedPortfolios[idx];
+      toPlot.push({
+        name: p.name,
+        assets: p.assets.filter(a => a.weight > 0),
+        leverage: !!p.leverage,
+        leverageMultiplier: p.leverageMultiplier ?? 2.0,
+        borrowRate: p.borrowRate ?? 0.07
+      });
+    }
+  });
+
+  const hideAll = (msg, ddMsg = '') => {
+    wrap.classList.add('hidden'); placeholder.classList.remove('hidden');
+    ddWrap.classList.add('hidden'); ddPlaceholder.classList.remove('hidden');
+    if (msg) placeholder.innerHTML = msg;
+    if (ddMsg) ddPlaceholder.innerHTML = ddMsg;
+    if (summaryEl) summaryEl.innerHTML = '';
+    if (ddSummaryEl) ddSummaryEl.innerHTML = '';
+  };
+
+  if (toPlot.length === 0) { hideAll('Allocate weights or check "Compare" on a saved portfolio to view performance.'); return; }
+
+  const allNeededSymbols = new Set(toPlot.flatMap(ptf => ptf.assets.map(a => a.symbol)));
+
+  const missingSymbols = Array.from(allNeededSymbols).filter(sym => !marketDataCache[sym] || !marketDataCache[sym].priceMap);
+  if (missingSymbols.length > 0) {
+    hideAll('<div class="spinner" style="margin:0 auto 10px;"></div><div>Fetching historical data...</div>', 'Waiting for data...');
+    await Promise.all(missingSymbols.map(async sym => { marketDataCache[sym] = await loadSymbolData(sym); }));
+  }
+
+  let commonDates = null;
+  let hasValidAssets = false;
+  for (let sym of allNeededSymbols) {
+    const data = marketDataCache[sym];
+    if (data && data.dates && data.priceMap) {
+      hasValidAssets = true;
+      commonDates = commonDates ? commonDates.filter(d => data.priceMap.has(d)) : data.dates;
+    }
+  }
+
+  if (!hasValidAssets || !commonDates || commonDates.length < 2) {
+    hideAll('Insufficient overlapping dates or valid data.', 'Insufficient data.');
+    return;
+  }
+
+  placeholder.classList.add('hidden'); wrap.classList.remove('hidden');
+  ddPlaceholder.classList.add('hidden'); ddWrap.classList.remove('hidden');
+
+  const latestDate = commonDates[commonDates.length - 1];
+  dateInput.min = commonDates[0]; dateInput.max = latestDate;
+
+  let startIdx = 0;
+  if (['1y','3y','5y','10y'].includes(btSelectedRange)) {
+    const target = new Date(latestDate);
+    target.setFullYear(target.getFullYear() - parseInt(btSelectedRange));
+    const found = commonDates.findIndex(d => d >= target.toISOString().split('T')[0]);
+    startIdx = found === -1 ? 0 : found;
+  } else if (btSelectedRange === 'custom' && btCustomStartDate) {
+    const found = commonDates.findIndex(d => d >= btCustomStartDate);
+    startIdx = found === -1 ? 0 : found;
+  }
+  if (startIdx >= commonDates.length - 1) startIdx = Math.max(0, commonDates.length - 2);
+
+  const slicedDates = commonDates.slice(startIdx);
+  dateInput.value = slicedDates[0];
+
+  const datasets = [], ddDatasets = [];
+  const colors = ['#38bdf8','#34d399','#facc15','#f87171','#a78bfa'];
+
+  if (btChartInst) btChartInst.destroy();
+  if (ddChartInst) ddChartInst.destroy();
+
+  const ctx   = document.getElementById('btChart').getContext('2d');
+  const ddCtx = document.getElementById('ddChart').getContext('2d');
+
+  const summaryParts = [], ddSummaryParts = [];
+  let baselineCurve = null;
+
+  const fmtDd = (name, maxDd, avgDd) =>
+    `<span>${name}: <span class="text-dim font-medium">Max DD</span> <span class="text-red">${(maxDd*100).toFixed(2)}%</span> <span class="text-dim font-medium" style="margin-left:4px;">Avg DD</span> <span class="text-amber">${(avgDd*100).toFixed(2)}%</span></span>`;
+
+  toPlot.forEach((ptf, ptfIdx) => {
+    const validAssets = ptf.assets.filter(a => marketDataCache[a.symbol] && marketDataCache[a.symbol].priceMap);
+    if (!validAssets.length) return;
+
+    const isLev = !!ptf.leverage;
+    const levMul = isLev ? (ptf.leverageMultiplier || 2.0) : 1.0;
+    const bRate = ptf.borrowRate || 0.07;
+    const displayName = `${ptf.name}${isLev ? ` (${levMul.toFixed(1)}x @ ${(bRate*100).toFixed(1)}%)` : ' (1x)'}`;
+
+    const wSum = validAssets.reduce((a, x) => a + x.weight, 0) || 1;
+    const normWeights = validAssets.map(a => a.weight / wSum);
+
+    const curve = [10000];
+    let wealth = normWeights.map(w => 10000 * w * levMul);
+    let debt = (levMul - 1.0) * 10000;
+    let cash = 0;
+
+    for (let d = 1; d < slicedDates.length; d++) {
+      const prevDate = slicedDates[d-1], currDate = slicedDates[d];
+      let dayAssetTotal = 0;
+
+      for (let i = 0; i < validAssets.length; i++) {
+        const sym    = validAssets[i].symbol;
+        const p_curr = marketDataCache[sym].priceMap.get(currDate);
+        const p_prev = marketDataCache[sym].priceMap.get(prevDate);
+        const dRet   = (p_prev && p_curr) ? (p_curr - p_prev) / p_prev : 0;
+        const dailyYield = (marketDataCache[sym].divYield || 0) / 252;
+        if (dripEnabled) { wealth[i] *= (1 + dRet + dailyYield); }
+        else { cash += wealth[i] * dailyYield; wealth[i] *= (1 + dRet); }
+        dayAssetTotal += wealth[i];
+      }
+
+      if (isLev) cash -= debt * (bRate / 252);
+
+      const netEquity = Math.max(0, dayAssetTotal + cash - debt);
+      if (netEquity <= 0) {
+        curve.push(0);
+        wealth = wealth.map(() => 0);
+        debt = 0;
+        cash = 0;
+      } else {
+        curve.push(netEquity);
+      }
+    }
+
+    if (ptfIdx === 0) baselineCurve = curve;
+    datasets.push({ label: displayName, data: curve, borderColor: colors[ptfIdx % colors.length], borderWidth: 2, pointRadius: 0, backgroundColor: 'transparent', fill: false, tension: 0.1 });
+
+    let peak = -Infinity, maxDdVal = 0;
+    const ddCurve = curve.map(val => {
+      if (val > peak) peak = val;
+      const dd = peak > 0 ? (val - peak) / peak : -1;
+      if (dd < maxDdVal) maxDdVal = dd;
+      return dd;
+    });
+    ddDatasets.push({ label: displayName + ' DD', data: ddCurve, borderColor: colors[ptfIdx % colors.length], borderWidth: 1.5, pointRadius: 0, backgroundColor: 'transparent', fill: false, tension: 0.1 });
+
+    const avgDdVal = ddCurve.reduce((a,b) => a+b, 0) / ddCurve.length;
+    const retPct   = ((curve[curve.length-1] - 10000) / 10000) * 100;
+    const retStr   = `<span class="${retPct>=0?'text-green':'text-red'}">${retPct>=0?'+':''}${retPct.toFixed(2)}%</span>`;
+
+    if (ptfIdx === 0) {
+      summaryParts.push(`<span>${displayName}: ${retStr}</span>`);
+    } else {
+      const daysAhead = baselineCurve ? curve.filter((v,i) => v > baselineCurve[i]).length : 0;
+      const winRate   = baselineCurve ? (daysAhead / curve.length) * 100 : 0;
+      summaryParts.push(`<span>${displayName}: ${retStr} <span class="${winRate>=50?'text-green':'text-red'}" style="font-size:10px;">(${winRate.toFixed(1)}% win)</span></span>`);
+    }
+    ddSummaryParts.push(fmtDd(displayName, maxDdVal, avgDdVal));
+  });
+
+  // Managed Strategy — dynamic rebalancing overlay
+  const isManagedOn = dom.enableManagedSwitch.checked;
+  if (isManagedOn && currentAssets.length > 1) {
+    const managedMetric  = document.getElementById('managedMetric').value;
+    const rebalInterval  = parseInt(document.getElementById('managedCadence').value) || 63;
+    const rf             = RISK_FREE_RATE;
+    const maxW           = parseFloat(document.getElementById('managedMaxW').value) / 100;
+    const validAssets    = currentAssets.filter(a => marketDataCache[a.symbol] && marketDataCache[a.symbol].priceMap);
+    const fundamentals   = validAssets.map(p => ({ pe: marketDataCache[p.symbol].pe, peg: marketDataCache[p.symbol].peg, ebitda: marketDataCache[p.symbol].ebitda }));
+
+    const isLev = currentPortfolioConfig.leverage;
+    const levMul = isLev ? (currentPortfolioConfig.leverageMultiplier || 2.0) : 1.0;
+    const bRate = currentPortfolioConfig.borrowRate || 0.07;
+
+    const managedCurve   = [10000];
+    let managedCash      = 0;
+    let managedDebt      = (levMul - 1.0) * 10000;
+    let currentAlloc     = Array(validAssets.length).fill(1 / validAssets.length);
+    let assetHoldingsVal = currentAlloc.map(w => 10000 * levMul * w);
+    const lookbackDays   = 252;
+
+    for (let d = 1; d < slicedDates.length; d++) {
+      const prevDate = slicedDates[d-1], currDate = slicedDates[d];
+
+      if ((d - 1) % rebalInterval === 0) {
+        const globalDateIdx  = commonDates.indexOf(prevDate);
+        const lookbackWindow = commonDates.slice(Math.max(0, globalDateIdx - lookbackDays), globalDateIdx + 1);
+
+        if (lookbackWindow.length >= 30) {
+          const windowReturns = validAssets.map(asset => {
+            const rets = [];
+            for (let k = 1; k < lookbackWindow.length; k++) {
+              const p0 = asset.priceMap.get(lookbackWindow[k-1]);
+              const p1 = asset.priceMap.get(lookbackWindow[k]);
+              rets.push((p1 - p0) / p0 + (dripEnabled ? (asset.divYield || 0) / 252 : 0));
+            }
+            return rets;
+          });
+          currentAlloc     = getOptimalWeights(managedMetric, windowReturns, fundamentals, rf, maxW);
+          const grossPool  = assetHoldingsVal.reduce((a,b)=>a+b, 0) + managedCash;
+          assetHoldingsVal = currentAlloc.map(w => grossPool * w);
+          managedCash      = 0;
+        }
+      }
+
+      let daySum = 0;
+      for (let i = 0; i < validAssets.length; i++) {
+        const sym  = validAssets[i].symbol;
+        const p_c  = marketDataCache[sym].priceMap.get(currDate);
+        const p_p  = marketDataCache[sym].priceMap.get(prevDate);
+        const dRet = (p_p && p_c) ? (p_c - p_p) / p_p : 0;
+        const dy   = (marketDataCache[sym].divYield || 0) / 252;
+        if (dripEnabled) { assetHoldingsVal[i] *= (1 + dRet + dy); }
+        else { managedCash += assetHoldingsVal[i] * dy; assetHoldingsVal[i] *= (1 + dRet); }
+        daySum += assetHoldingsVal[i];
+      }
+
+      if (isLev) managedCash -= managedDebt * (bRate / 252);
+
+      const mNet = Math.max(0, daySum + managedCash - managedDebt);
+      if (mNet <= 0) {
+        managedCurve.push(0);
+        assetHoldingsVal = assetHoldingsVal.map(()=>0);
+        managedDebt = 0;
+      } else {
+        managedCurve.push(mNet);
+      }
+    }
+
+    const managedLabel = `Managed Strategy (${document.getElementById('managedMetric').selectedOptions[0].text})${isLev ? ` (${levMul.toFixed(1)}x @ ${(bRate*100).toFixed(1)}%)` : ' (1x)'}`;
+    datasets.push({ label: managedLabel, data: managedCurve, borderColor: '#a78bfa', borderWidth: 2.5, borderDash: [5,4], pointRadius: 0, backgroundColor: 'transparent', tension: 0.1 });
+
+    let mPeak = -Infinity, mMaxDdVal = 0;
+    const mDdCurve = managedCurve.map(val => {
+      if (val > mPeak) mPeak = val;
+      const dd = mPeak > 0 ? (val - mPeak) / mPeak : -1;
+      if (dd < mMaxDdVal) mMaxDdVal = dd;
+      return dd;
+    });
+    ddDatasets.push({ label: managedLabel + ' DD', data: mDdCurve, borderColor: '#a78bfa', borderWidth: 1.5, borderDash: [5,4], pointRadius: 0, backgroundColor: 'transparent', tension: 0.1 });
+
+    const mRetPct = ((managedCurve[managedCurve.length-1] - 10000) / 10000) * 100;
+    let winRateHtml = '';
+    if (baselineCurve && baselineCurve.length === managedCurve.length) {
+      const winRate = managedCurve.filter((v,i) => v > baselineCurve[i]).length / managedCurve.length * 100;
+      winRateHtml = `<span class="${winRate>=50?'text-green':'text-red'}" style="font-size:10px;">(${winRate.toFixed(1)}% win)</span>`;
+    }
+    summaryParts.push(`<span>Managed: <span class="${mRetPct>=0?'text-green':'text-red'}">${mRetPct>=0?'+':''}${mRetPct.toFixed(2)}%</span> ${winRateHtml}</span>`);
+    ddSummaryParts.push(fmtDd("Managed", mMaxDdVal, mDdCurve.reduce((a,b) => a+b, 0) / mDdCurve.length));
+  }
+
+  const sep = '<span class="text-dim" style="margin:0 8px;">|</span>';
+  if (summaryEl)   summaryEl.innerHTML   = summaryParts.join(sep);
+  if (ddSummaryEl) ddSummaryEl.innerHTML = ddSummaryParts.join(sep);
+
+  const chartOptions = (isDrawdown) => ({
+    responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: isDrawdown ? ddDatasets.length > 1 : datasets.length > 1, labels: { color: getCssVar('--text-muted'), font: { family: "'Inter',sans-serif", size: 10 } } },
+      tooltip: { backgroundColor: getCssVar('--bg-card2'), borderColor: getCssVar('--border-hi'), borderWidth: 1, titleColor: getCssVar('--text-dim'), bodyColor: getCssVar('--text'), itemSort: (a,b) => isDrawdown ? a.parsed.y - b.parsed.y : b.parsed.y - a.parsed.y, callbacks: { title: ctx => slicedDates[ctx[0].dataIndex] || '', label: ctx => `  ${ctx.dataset.label}: ${isDrawdown ? (ctx.parsed.y*100).toFixed(2)+'%' : fmt$(ctx.parsed.y)}` } }
+    },
+    scales: {
+      x: { ticks: { maxTicksLimit: 8, color: getCssVar('--text-muted'), display: !isDrawdown }, grid: { display: false }, border: { display: false } },
+      y: { max: isDrawdown ? 0 : undefined, ticks: { color: getCssVar('--text-muted'), callback: v => isDrawdown ? (v*100).toFixed(0)+'%' : fmt$(v) }, grid: { color: getCssVar('--chart-grid') }, border: { display: false } }
+    }
+  });
+
+  btChartInst = new Chart(ctx,   { type: 'line', data: { labels: slicedDates, datasets }, options: chartOptions(false) });
+  ddChartInst = new Chart(ddCtx, { type: 'line', data: { labels: slicedDates, datasets: ddDatasets }, options: chartOptions(true) });
+}
+
+function runOptimization() {
+  const ready = portfolio.filter(p => !p.loading && p.returns && p.priceMap);
+  if (ready.length < 2) { showToast('Need at least 2 loaded tickers to optimize.'); return; }
+
+  const metric = document.getElementById('optimizerMetric').value;
+  const rf     = RISK_FREE_RATE;
+  const maxW   = parseFloat(document.getElementById('optMaxWeight').value) / 100;
+
+  document.getElementById('optimizerComputing').classList.remove('hidden');
+  document.getElementById('optimizerResults').classList.add('hidden');
+
+  setTimeout(() => {
+    const commonDates = ready[0].dates.filter(d => ready.every(p => p.priceMap.has(d)));
+    if (commonDates.length < 30) {
+      document.getElementById('optimizerComputing').classList.add('hidden');
+      showToast('Insufficient overlapping trading dates between selected tickers.');
+      return;
+    }
+
+    const n = ready.length;
+    const alignedReturns = ready.map(asset => {
+      const rets = [];
+      for (let i = 1; i < commonDates.length; i++) {
+        const p0 = asset.priceMap.get(commonDates[i-1]);
+        const p1 = asset.priceMap.get(commonDates[i]);
+        rets.push((p1 - p0) / p0 + (dripEnabled ? (asset.divYield || 0) / 252 : 0));
+      }
+      return rets;
+    });
+
+    const fundamentals = ready.map(p => ({ pe: p.pe, peg: p.peg, ebitda: p.ebitda }));
+    let w = getOptimalWeights(metric, alignedReturns, fundamentals, rf, maxW);
+
+    let totalW = 0;
+    w.forEach((wi, i) => { const pw = parseFloat((wi * 100).toFixed(2)); ready[i].weight = pw; totalW += pw; });
+
+    if (ready.length > 0 && Math.abs(totalW - 100) > 0.001) {
+      const maxIdx = ready.reduce((best, _, i) => ready[i].weight > ready[best].weight ? i : best, 0);
+      ready[maxIdx].weight = parseFloat((ready[maxIdx].weight + (100 - totalW)).toFixed(2));
+    }
+
+    portfolio.forEach(p => { if (!ready.find(r => r.symbol === p.symbol)) p.weight = 0; });
+
+    let portRet = 0, portVar = 0;
+    for (let i = 0; i < n; i++) portRet += w[i] * annualStats(ready[i], rf).annReturn;
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) portVar += w[i] * w[j] * covariance(alignedReturns[i], alignedReturns[j]) * 252;
+    const portVol = Math.sqrt(Math.max(portVar, 0));
+    const sharpe  = portVol > 0 ? (portRet - rf) / portVol : 0;
+
+    document.getElementById('optimizerComputing').classList.add('hidden');
+    document.getElementById('optimizerResults').classList.remove('hidden');
+    document.getElementById('optimizerStats').innerHTML = `
+      <div class="stat-cell"><div class="stat-label">Expected Return</div><div class="stat-value pos">${(portRet*100).toFixed(2)}%</div></div>
+      <div class="stat-cell"><div class="stat-label">Volatility</div><div class="stat-value amber">${(portVol*100).toFixed(2)}%</div></div>
+      <div class="stat-cell"><div class="stat-label">Sharpe Ratio</div><div class="stat-value">${sharpe.toFixed(3)}</div></div>`;
+
+    updateAllViews();
+  }, 30);
+}
+
+// Synchronous GBM fallback
+function runMcSync(startVal, years, sims, portReturn, portVol, dripEnabled, portDivYield, leverage, borrowRate) {
+  const dt = 1/252, steps = years * 252;
+  const lev = leverage || 1.0;
+  const rBorrow = borrowRate || 0.07;
+  const effMu = lev * portReturn - (lev - 1) * rBorrow;
+  const effVol = lev * portVol;
+  const muDt = (effMu - 0.5 * effVol * effVol) * dt;
+  const sigDt = effVol * Math.sqrt(dt);
+
+  const checkpoints = Array.from({length: years}, (_, i) => Math.round((i+1) * 252));
+  const cpVals = checkpoints.map(() => []);
+  const finalVals = new Float64Array(sims);
+
+  for (let sim = 0; sim < sims; sim++) {
+    let val = startVal, cash = 0, cpIdx = 0;
+    for (let d = 1; d <= steps; d++) {
+      if (val <= 0) {
+        val = 0;
+        if (cpIdx < checkpoints.length && d === checkpoints[cpIdx]) { cpVals[cpIdx].push(cash); cpIdx++; }
+        continue;
+      }
+      let u1 = Math.random(), u2 = Math.random();
+      if (u1 === 0) u1 = 1e-10;
+      val *= Math.exp(muDt + sigDt * Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2));
+      if (!dripEnabled) cash += (val * lev) * portDivYield * dt;
+      if (cpIdx < checkpoints.length && d === checkpoints[cpIdx]) { cpVals[cpIdx].push(Math.max(0, val + cash)); cpIdx++; }
+    }
+    finalVals[sim] = Math.max(0, val + cash);
+  }
+
+  cpVals.forEach(arr => arr.sort((a,b) => a - b));
+  finalVals.sort();
+  const pct = (arr, p) => arr[Math.max(0, Math.floor(p * arr.length / 100) - 1)];
+  return {
+    p10Data: [startVal, ...cpVals.map(a => pct(a, 10))],
+    p50Data: [startVal, ...cpVals.map(a => pct(a, 50))],
+    p90Data: [startVal, ...cpVals.map(a => pct(a, 90))],
+    stats: { min: finalVals[0], p10: pct(finalVals, 10), median: pct(finalVals, 50), p90: pct(finalVals, 90), max: finalVals[finalVals.length-1] }
+  };
+}
+
+function runMonteCarlo() {
+  const ready = portfolio.filter(p => !p.loading && p.returns && p.weight > 0);
+  if (!ready.length) { showToast('Add allocated tickers with valid data first.'); return; }
+
+  const total = ready.reduce((s, p) => s + (p.weight || 0), 0);
+  if (Math.abs(total - 100) > 1 && !confirm(`Allocated weights total ${total.toFixed(2)}% — continue?`)) return;
+
+  const startVal = parseFloat(document.getElementById('startingValue').value) || 10000;
+  const years    = parseInt(document.getElementById('mcHorizon').value);
+  const sims     = parseInt(document.getElementById('mcSims').value);
+  const rf       = RISK_FREE_RATE;
+
+  document.getElementById('mcPlaceholder').classList.add('hidden');
+  document.getElementById('mcChartWrap').classList.remove('hidden');
+  document.getElementById('mcComputing').classList.remove('hidden');
+
+  const wNorm = ready.map(p => (p.weight||0) / 100);
+  let portReturn = 0, portVar = 0, portDivYield = 0;
+  const n = ready.length;
+
+  const levMul = currentPortfolioConfig.leverage ? (currentPortfolioConfig.leverageMultiplier || 2.0) : 1.0;
+
+  for (let i = 0; i < n; i++) {
+    const s = annualStats(ready[i], rf);
+    portReturn += wNorm[i] * (currentPortfolioConfig.leverage ? (s.annReturn + (currentPortfolioConfig.borrowRate * (levMul - 1))) / levMul : s.annReturn);
+    portDivYield += wNorm[i] * ready[i].divYield;
+  }
+  const allR = ready.map(e => e.returns);
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) portVar += wNorm[i] * wNorm[j] * covariance(allR[i], allR[j]) * 252;
+
+  const portVol = Math.sqrt(Math.max(portVar, 0));
+  const payload = {
+    startVal, years, sims, portReturn, portVol, dripEnabled, portDivYield,
+    leverage: levMul,
+    borrowRate: currentPortfolioConfig.borrowRate
+  };
+
+  const processMcResults = (data) => {
+    const { p10Data, p50Data, p90Data, stats } = data;
+    const labels = ['Start', ...Array.from({length: years}, (_, i) => `Y${i+1}`)];
+
+    if (mcChartInst) mcChartInst.destroy();
+    mcChartInst = new Chart(document.getElementById('mcChart').getContext('2d'), {
+      type: 'line',
+      data: { labels, datasets: [
+        { label: '90th Percentile', data: p90Data, borderColor: '#34d399', borderWidth: 2.5, pointRadius: 3, backgroundColor: 'transparent', fill: false, tension: .4 },
+        { label: 'Median',          data: p50Data, borderColor: '#7c6aff', borderWidth: 3,   pointRadius: 3, backgroundColor: 'transparent', fill: false, tension: .4 },
+        { label: '10th Percentile', data: p10Data, borderColor: '#f87171', borderWidth: 2.5, pointRadius: 3, backgroundColor: 'transparent', fill: false, tension: .4 },
+      ]},
+      options: {
+        responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { labels: { color: getCssVar('--text-muted') } },
+          tooltip: { backgroundColor: getCssVar('--bg-card2'), borderColor: getCssVar('--border-hi'), borderWidth: 1, titleColor: getCssVar('--text-dim'), bodyColor: getCssVar('--text'), itemSort: (a,b) => b.parsed.y - a.parsed.y, callbacks: { label: ctx => `  ${ctx.dataset.label}: ${fmt$(ctx.parsed.y)}` } }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: getCssVar('--text-muted') }, border: { display: false } },
+          y: { grid: { color: getCssVar('--chart-grid') }, ticks: { color: getCssVar('--text-muted'), callback: v => fmt$(v) }, border: { display: false } }
+        }
+      }
+    });
+
+    const levStr = currentPortfolioConfig.leverage ? ` · ${levMul.toFixed(1)}x Lev @ ${(currentPortfolioConfig.borrowRate*100).toFixed(1)}%` : ' · 1x Unlevered';
+    document.getElementById('mcSubtitle').textContent = `${sims.toLocaleString()} sims · ${years}yr · GBM · μ=${((payload.leverage * portReturn - (payload.leverage - 1)*currentPortfolioConfig.borrowRate)*100).toFixed(1)}% σ=${((payload.leverage * portVol)*100).toFixed(1)}%${levStr}`;
+    document.getElementById('mcStats').innerHTML = [
+      {l:'Min', v:stats.min}, {l:'10th Pct', v:stats.p10}, {l:'Median', v:stats.median}, {l:'90th Pct', v:stats.p90}, {l:'Max', v:stats.max}
+    ].map(s => `<div class="mc-stat"><div class="mc-stat-label">${s.l}</div><div class="mc-stat-val">${fmt$(s.v)}</div></div>`).join('');
+
+    document.getElementById('mcComputing').classList.add('hidden');
+  };
+
+  if (mcWorker) {
+    mcWorker.onmessage = (e) => processMcResults(e.data);
+    mcWorker.postMessage(payload);
+  } else {
+    setTimeout(() => processMcResults(runMcSync(startVal, years, sims, portReturn, portVol, dripEnabled, portDivYield, payload.leverage, payload.borrowRate)), 50);
+  }
+}
+
+// Search & Autocomplete
+const LOCAL_TICKERS = [
+  {s:'AAPL',n:'Apple Inc.',t:'Common Stock'},{s:'MSFT',n:'Microsoft Corp.',t:'Common Stock'},{s:'NVDA',n:'NVIDIA Corp.',t:'Common Stock'},
+  {s:'AMZN',n:'Amazon.com Inc.',t:'Common Stock'},{s:'GOOGL',n:'Alphabet Inc.',t:'Common Stock'},{s:'META',n:'Meta Platforms',t:'Common Stock'},
+  {s:'TSLA',n:'Tesla Inc.',t:'Common Stock'},{s:'JPM',n:'JPMorgan Chase',t:'Common Stock'},{s:'V',n:'Visa Inc.',t:'Common Stock'},
+  {s:'XOM',n:'Exxon Mobil',t:'Common Stock'},{s:'SPY',n:'SPDR S&P 500 ETF',t:'ETP'},{s:'VOO',n:'Vanguard S&P 500 ETF',t:'ETP'},
+  {s:'QQQ',n:'Invesco QQQ ETF',t:'ETP'},{s:'GLD',n:'SPDR Gold Shares',t:'ETP'}
+];
+
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  const q = e.target.value.trim();
+  clearTimeout(searchTimer);
+  if (!q) { document.getElementById('autocomplete').classList.add('hidden'); return; }
+
+  if (apiKey) {
+    document.getElementById('autocomplete').innerHTML = '<div class="ac-loading">Searching…</div>';
+    document.getElementById('autocomplete').classList.remove('hidden');
+    searchTimer = setTimeout(async () => {
+      try {
+        const r = await searchTD(q);
+        if (r.length) renderAC(r.map(x => ({s:x.symbol, n:x.instrument_name, t:x.instrument_type})), q);
+        else renderLocalAC(q);
+      } catch { renderLocalAC(q); }
+    }, 280);
+  } else { renderLocalAC(q); }
+});
+
+function renderLocalAC(q) {
+  const ql = q.toLowerCase();
+  renderAC(LOCAL_TICKERS.filter(t => t.s.toLowerCase().startsWith(ql) || t.n.toLowerCase().includes(ql)).slice(0, 8), q);
+}
+
+function renderAC(results, q) {
+  const ac = document.getElementById('autocomplete');
+  ac.innerHTML = results.length
+    ? results.map(r => `<div class="autocomplete-item" onclick="addTicker('${escHtml(r.s)}','${escHtml(r.n)}')"><span class="ac-ticker">${escHtml(r.s)}</span><span class="ac-name">${escHtml(r.n)}</span><span class="ac-add">+ Add</span></div>`).join('')
+    : `<div class="autocomplete-item" onclick="addTicker('${escHtml(q.toUpperCase())}','${escHtml(q.toUpperCase())}')"><span class="ac-ticker">${escHtml(q.toUpperCase())}</span><span class="ac-name">Add as custom</span><span class="ac-add">+ Add</span></div>`;
+  ac.classList.remove('hidden');
+}
+
+document.getElementById('searchInput').addEventListener('keydown', e => {
+  if (e.key === 'Escape') clearSearch();
+  if (e.key === 'Enter' && e.target.value.trim()) addTicker(e.target.value.trim().toUpperCase(), e.target.value.trim().toUpperCase());
+});
+document.addEventListener('click', e => { if (!document.getElementById('searchWrap').contains(e.target)) clearSearch(); });
+
+function clearSearch() { document.getElementById('searchInput').value = ''; document.getElementById('autocomplete').classList.add('hidden'); }
+
+// Utilities
+function fmt$(v) {
+  if (v >= 1e6) return '$' + (v/1e6).toFixed(2) + 'M';
+  if (v >= 1e3) return '$' + (v/1e3).toFixed(1) + 'K';
+  return '$' + v.toFixed(2);
+}
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function showToast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 5000); }
+
+window.addEventListener('DOMContentLoaded', async () => {
+  const savedKey = storage.get('td_key');
+  if (savedKey) { apiInput.value = savedKey; setApiKey(savedKey); }
+
+  fetchRiskFreeRate();
+  toggleManagedStrategy();
+  toggleHeatmap();
+  loadState();
+});
+</script>
+</body>
+</html>
