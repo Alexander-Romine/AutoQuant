@@ -1,0 +1,10 @@
+{
+  "description": "AutoQuant offers automated portfolio simulation and analysis tools to help investors optimize their investment strategies with ease and precision.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
