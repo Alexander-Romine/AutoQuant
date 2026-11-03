@@ -21,7 +21,7 @@ Automated portfolio simulation and analysis for building and testing investment 
 ## Tech Stack
 
 - [Vite](https://vite.dev/)
-- Vanilla JavaScript (single-file app in `index.html`)
+- JavaScript
 - [Chart.js](https://www.chartjs.org/)
 - Market data from [Twelve Data](https://twelvedata.com)
 - Hosted on [Vercel](https://vercel.com)
