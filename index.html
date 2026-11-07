@@ -917,6 +917,13 @@ function fetchRiskFreeRate() {
   storage.set('rf_rate_cache', JSON.stringify({ rate: 0.042, ts: Date.now() }));
 }
 
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 1 day cache TTL (pulls fresh data if > 1 day old)
+
+function isCacheStale(cached) {
+  if (!cached || !cached.timestamp) return true;
+  return (Date.now() - cached.timestamp) >= CACHE_TTL_MS;
+}
+
 function getFromLocalCache(symbol) {
   try {
     const raw = storage.get(`td_cache_${symbol}`);
@@ -966,8 +973,13 @@ async function loadState() {
 
   updateAllViews();
 
-  const missing = portfolio.filter(p => p.loading || !p.returns);
-  if (missing.length > 0) { await loadMissingItems(missing); updateAllViews(); }
+  // If tickers are loading, missing returns, or cached data is more than a day old, pull fresh data
+  const toRefresh = portfolio.filter(p => {
+    if (p.loading || !p.returns) return true;
+    const cached = getFromLocalCache(p.symbol);
+    return isCacheStale(cached);
+  });
+  if (toRefresh.length > 0) { await loadMissingItems(toRefresh); updateAllViews(); }
 }
 
 // API Integration
@@ -1014,7 +1026,7 @@ function setApiKey(key) {
     if (apiKey !== key.trim()) return;
     if (valid) {
       setApiKeyStatus('ok', '● Connected');
-      const pending = portfolio.filter(p => !p.returns || p.dataSource === 'n/a');
+      const pending = portfolio.filter(p => !p.returns || p.dataSource === 'n/a' || isCacheStale(getFromLocalCache(p.symbol)));
       if (pending.length > 0) {
         await Promise.all(pending.map(async p => {
           const data = await loadSymbolData(p.symbol, true);
@@ -1078,7 +1090,7 @@ async function loadSymbolData(symbol, forceRefresh = false) {
   const cacheKey = `td_cache_${symbol}`;
   const cached = getFromLocalCache(symbol);
 
-  if (!forceRefresh && cached && Date.now() - cached.timestamp < 7 * 24 * 60 * 60 * 1000) {
+  if (!forceRefresh && cached && !isCacheStale(cached)) {
     return cached.data;
   }
 
@@ -1771,9 +1783,16 @@ async function renderBacktest() {
 
   const allNeededSymbols = new Set(toPlot.flatMap(ptf => ptf.assets.map(a => a.symbol)));
 
-  const missingSymbols = Array.from(allNeededSymbols).filter(sym => !marketDataCache[sym] || !marketDataCache[sym].priceMap);
+  const missingSymbols = Array.from(allNeededSymbols).filter(sym => {
+    if (!marketDataCache[sym] || !marketDataCache[sym].priceMap) return true;
+    if (apiKey) {
+      const cached = getFromLocalCache(sym);
+      return isCacheStale(cached);
+    }
+    return false;
+  });
   if (missingSymbols.length > 0) {
-    hideAll('<div class="spinner" style="margin:0 auto 10px;"></div><div>Fetching historical data...</div>', 'Waiting for data...');
+    hideAll('<div class="spinner" style="margin:0 auto 10px;"></div><div>Updating historical data...</div>', 'Waiting for data...');
     await Promise.all(missingSymbols.map(async sym => { marketDataCache[sym] = await loadSymbolData(sym); }));
   }
 
