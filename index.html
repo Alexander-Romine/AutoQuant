@@ -621,15 +621,20 @@
           <span class="panel-title">Historical Backtest ($10k Start)</span>
         </div>
         <div class="flex items-center flex-wrap gap-md">
-          <div class="flex gap-xs">
+          <div class="flex gap-xs flex-wrap">
+            <button class="btn btn-ghost btn-range" data-range="1m" style="padding:5px 10px; font-size:11px;" onclick="setBacktestRange('1m')">1 Month</button>
+            <button class="btn btn-ghost btn-range" data-range="6m" style="padding:5px 10px; font-size:11px;" onclick="setBacktestRange('6m')">6 Months</button>
             <button class="btn btn-ghost btn-range" data-range="1y" style="padding:5px 10px; font-size:11px;" onclick="setBacktestRange('1y')">1 Year</button>
             <button class="btn btn-ghost btn-range" data-range="3y" style="padding:5px 10px; font-size:11px;" onclick="setBacktestRange('3y')">3 Year</button>
             <button class="btn btn-ghost btn-range" data-range="5y" style="padding:5px 10px; font-size:11px;" onclick="setBacktestRange('5y')">5 Year</button>
             <button class="btn btn-ghost btn-range" data-range="10y" style="padding:5px 10px; font-size:11px;" onclick="setBacktestRange('10y')">10 Year</button>
+            <button class="btn btn-ghost btn-range" data-range="custom" id="btnCustomRange" style="padding:5px 10px; font-size:11px;" onclick="applyCustomRange()">Custom</button>
           </div>
-          <div class="flex items-center gap-xs">
+          <div class="flex items-center gap-xs flex-wrap">
             <span class="field-label" style="margin-bottom:0; text-transform:none; font-size:11px;">From:</span>
-            <input class="field-input font-mono" type="date" id="btStartDate" style="padding:5px 8px; font-size:11px; width:125px;" onchange="onCustomDateChange(this.value)" />
+            <input class="field-input font-mono" type="date" id="btStartDate" style="padding:5px 8px; font-size:11px; width:125px;" onchange="onCustomDateChange()" />
+            <span class="field-label" style="margin-bottom:0; text-transform:none; font-size:11px; margin-left:4px;">To:</span>
+            <input class="field-input font-mono" type="date" id="btEndDate" style="padding:5px 8px; font-size:11px; width:125px;" onchange="onCustomDateChange()" />
           </div>
         </div>
       </div>
@@ -803,6 +808,7 @@ let ddChartInst = null;
 
 let btSelectedRange = '5y';
 let btCustomStartDate = null;
+let btCustomEndDate = null;
 let dripEnabled = true;
 let RISK_FREE_RATE = 0.042;
 
@@ -1629,8 +1635,28 @@ function renderCorrelation() {
 }
 
 // Backtest & Optimizer
-function setBacktestRange(range) { btSelectedRange = range; btCustomStartDate = null; renderBacktest(); }
-function onCustomDateChange(val) { if (!val) return; btSelectedRange = 'custom'; btCustomStartDate = val; renderBacktest(); }
+function setBacktestRange(range) {
+  btSelectedRange = range;
+  btCustomStartDate = null;
+  btCustomEndDate = null;
+  renderBacktest();
+}
+function applyCustomRange() {
+  const startEl = document.getElementById('btStartDate');
+  const endEl = document.getElementById('btEndDate');
+  btSelectedRange = 'custom';
+  btCustomStartDate = startEl ? startEl.value : null;
+  btCustomEndDate = endEl ? endEl.value : null;
+  renderBacktest();
+}
+function onCustomDateChange() {
+  const startEl = document.getElementById('btStartDate');
+  const endEl = document.getElementById('btEndDate');
+  btSelectedRange = 'custom';
+  btCustomStartDate = startEl ? startEl.value : null;
+  btCustomEndDate = endEl ? endEl.value : null;
+  renderBacktest();
+}
 
 function getOptimalWeights(metric, returnsMatrix, fundamentals, rf, maxW) {
   const n = returnsMatrix.length;
@@ -1699,6 +1725,7 @@ async function renderBacktest() {
   const summaryEl    = document.getElementById('btSummary');
   const ddSummaryEl  = document.getElementById('ddSummary');
   const dateInput    = document.getElementById('btStartDate');
+  const endDateInput = document.getElementById('btEndDate');
 
   document.querySelectorAll('.btn-range').forEach(b => {
     b.classList.toggle('btn-amber', b.dataset.range === btSelectedRange);
@@ -1769,22 +1796,63 @@ async function renderBacktest() {
   ddPlaceholder.classList.add('hidden'); ddWrap.classList.remove('hidden');
 
   const latestDate = commonDates[commonDates.length - 1];
-  dateInput.min = commonDates[0]; dateInput.max = latestDate;
+  const earliestDate = commonDates[0];
+  if (dateInput) { dateInput.min = earliestDate; dateInput.max = latestDate; }
+  if (endDateInput) { endDateInput.min = earliestDate; endDateInput.max = latestDate; }
 
   let startIdx = 0;
-  if (['1y','3y','5y','10y'].includes(btSelectedRange)) {
+  let endIdx = commonDates.length - 1;
+
+  if (['1m', '6m'].includes(btSelectedRange)) {
+    const target = new Date(latestDate);
+    const months = btSelectedRange === '1m' ? 1 : 6;
+    target.setMonth(target.getMonth() - months);
+    const targetStr = target.toISOString().split('T')[0];
+    const found = commonDates.findIndex(d => d >= targetStr);
+    startIdx = found === -1 ? 0 : found;
+    endIdx = commonDates.length - 1;
+  } else if (['1y','3y','5y','10y'].includes(btSelectedRange)) {
     const target = new Date(latestDate);
     target.setFullYear(target.getFullYear() - parseInt(btSelectedRange));
-    const found = commonDates.findIndex(d => d >= target.toISOString().split('T')[0]);
+    const targetStr = target.toISOString().split('T')[0];
+    const found = commonDates.findIndex(d => d >= targetStr);
     startIdx = found === -1 ? 0 : found;
-  } else if (btSelectedRange === 'custom' && btCustomStartDate) {
-    const found = commonDates.findIndex(d => d >= btCustomStartDate);
-    startIdx = found === -1 ? 0 : found;
-  }
-  if (startIdx >= commonDates.length - 1) startIdx = Math.max(0, commonDates.length - 2);
+    endIdx = commonDates.length - 1;
+  } else if (btSelectedRange === 'custom') {
+    if (btCustomStartDate) {
+      const found = commonDates.findIndex(d => d >= btCustomStartDate);
+      startIdx = found === -1 ? 0 : found;
+    } else {
+      startIdx = 0;
+    }
+    if (btCustomEndDate) {
+      let foundEnd = -1;
+      for (let i = commonDates.length - 1; i >= 0; i--) {
+        if (commonDates[i] <= btCustomEndDate) {
+          foundEnd = i;
+          break;
+        }
+      }
+      endIdx = foundEnd === -1 ? commonDates.length - 1 : foundEnd;
+    } else {
+      endIdx = commonDates.length - 1;
+    }
 
-  const slicedDates = commonDates.slice(startIdx);
-  dateInput.value = slicedDates[0];
+    if (startIdx >= endIdx) {
+      if (startIdx < commonDates.length - 1) {
+        endIdx = startIdx + 1;
+      } else {
+        startIdx = Math.max(0, endIdx - 1);
+      }
+    }
+  }
+
+  if (startIdx >= commonDates.length - 1) startIdx = Math.max(0, commonDates.length - 2);
+  if (endIdx <= startIdx) endIdx = Math.min(commonDates.length - 1, startIdx + 1);
+
+  const slicedDates = commonDates.slice(startIdx, endIdx + 1);
+  if (dateInput) dateInput.value = slicedDates[0];
+  if (endDateInput) endDateInput.value = slicedDates[slicedDates.length - 1];
 
   const datasets = [], ddDatasets = [];
   const colors = ['#38bdf8','#34d399','#facc15','#f87171','#a78bfa'];
@@ -2090,7 +2158,9 @@ function runMonteCarlo() {
   if (!ready.length) { showToast('Add allocated tickers with valid data first.'); return; }
 
   const total = ready.reduce((s, p) => s + (p.weight || 0), 0);
-  if (Math.abs(total - 100) > 1 && !confirm(`Allocated weights total ${total.toFixed(2)}% — continue?`)) return;
+  if (Math.abs(total - 100) > 1) {
+    showToast(`Note: Allocated weights total ${total.toFixed(2)}% (normalized for simulation).`);
+  }
 
   const startVal = parseFloat(document.getElementById('startingValue').value) || 10000;
   const years    = parseInt(document.getElementById('mcHorizon').value);
