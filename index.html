@@ -6,6 +6,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>AutoQuant</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="canonical" href="https://auto-quant-portfolio.vercel.app/" />
+<meta property="og:title" content="AutoQuant" />
+<meta property="og:description" content="Portfolio simulation, backtesting, Monte Carlo projections, and mean-variance optimization." />
+<meta property="og:type" content="website" />
+<meta property="og:image" content="https://auto-quant-portfolio.vercel.app/favicon.svg" />
+<meta name="twitter:card" content="summary" />
 <!-- figma:head-end -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" />
@@ -18,87 +24,82 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg:             #04060d;
-    --bg-panel:       rgba(12, 16, 26, 0.65);
-    --bg-main:        transparent;
-    --bg-card:        rgba(16, 22, 36, 0.7);
-    --bg-card-hover:  rgba(24, 32, 52, 0.85);
-    --bg-card2:       #0e1324;
-    --bg-input:       rgba(10, 14, 24, 0.8);
-    --overlay-bg:     rgba(4, 6, 13, 0.75);
+    --bg:             #0b0f17;
+    --bg-panel:       #111827;
+    --bg-main:        #0b0f17;
+    --bg-card:        #161f30;
+    --bg-card-hover:  #1c273b;
+    --bg-card2:       #182234;
+    --bg-input:       #0e1522;
+    --overlay-bg:     rgba(11, 15, 23, 0.88);
 
-    --border:         rgba(255, 255, 255, 0.06);
-    --border-hi:      rgba(255, 255, 255, 0.12);
-    --chart-grid:     rgba(255, 255, 255, 0.03);
+    --border:         rgba(255, 255, 255, 0.08);
+    --border-hi:      rgba(255, 255, 255, 0.16);
+    --chart-grid:     rgba(255, 255, 255, 0.04);
 
     --text:           #f1f5f9;
     --text-dim:       #94a3b8;
     --text-muted:     #64748b;
 
-    --purple:         #7c6aff;
-    --purple2:        #a78bfa;
+    --purple:         #3b82f6;
+    --purple2:        #60a5fa;
     --blue:           #38bdf8;
-    --blue-dim:       rgba(56, 189, 248, 0.15);
-    --green:          #34d399;
-    --green-dim:      rgba(52, 211, 153, 0.15);
-    --red:            #f87171;
-    --red-dim:        rgba(248, 113, 113, 0.15);
-    --amber:          #fbbf24;
-    --amber-dim:      rgba(251, 191, 36, 0.15);
+    --blue-dim:       rgba(56, 189, 248, 0.14);
+    --green:          #10b981;
+    --green-dim:      rgba(16, 185, 129, 0.14);
+    --red:            #ef4444;
+    --red-dim:        rgba(239, 68, 68, 0.14);
+    --amber:          #f59e0b;
+    --amber-dim:      rgba(245, 158, 11, 0.14);
 
-    --grad:           linear-gradient(135deg, #a78bfa, #38bdf8);
-    --grad-btn:       linear-gradient(135deg, #7c6aff, #2563eb);
     --mono:           'DM Mono', monospace;
     --sans:           'Inter', sans-serif;
 
-    --r-sm:           6px;
-    --r-md:           10px;
-    --r-lg:           16px;
+    --r-sm:           4px;
+    --r-md:           6px;
+    --r-lg:           8px;
 
-    --shadow-lg:      0 8px 40px rgba(0, 0, 0, 0.5);
-    --shadow-hover:   0 8px 24px rgba(0, 0, 0, 0.4);
+    --shadow-lg:      0 8px 24px rgba(0, 0, 0, 0.35);
+    --shadow-hover:   0 2px 8px rgba(0, 0, 0, 0.2);
   }
 
   body { color-scheme: dark; }
 
   body.light-mode {
     color-scheme: light;
-    --bg:             #ffffff;
-    --bg-panel:       #f8fafc;
+    --bg:             #f8fafc;
+    --bg-panel:       #ffffff;
+    --bg-main:        #f8fafc;
     --bg-card:        #ffffff;
     --bg-card-hover:  #f1f5f9;
     --bg-card2:       #ffffff;
     --bg-input:       #ffffff;
-    --overlay-bg:     rgba(255, 255, 255, 0.8);
+    --overlay-bg:     rgba(248, 250, 252, 0.9);
 
-    --border:         rgba(0, 0, 0, 0.06);
-    --border-hi:      rgba(0, 0, 0, 0.12);
-    --chart-grid:     rgba(0, 0, 0, 0.04);
+    --border:         #e2e8f0;
+    --border-hi:      #cbd5e1;
+    --chart-grid:     rgba(15, 23, 42, 0.05);
 
     --text:           #0f172a;
     --text-dim:       #475569;
     --text-muted:     #64748b;
 
-    --purple:         #6366f1;
-    --purple2:        #4f46e5;
+    --purple:         #2563eb;
+    --purple2:        #1d4ed8;
 
-    --shadow-hover:   0 6px 16px rgba(0, 0, 0, 0.06);
+    --shadow-hover:   0 2px 8px rgba(0, 0, 0, 0.06);
   }
 
   html, body {
     height: 100vh; display: flex; flex-direction: column; overflow: hidden;
     background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 13px; line-height: 1.5;
-    background-image: radial-gradient(ellipse at 15% 10%, rgba(124,106,255,0.08) 0%, transparent 60%),
-                      radial-gradient(ellipse at 85% 85%, rgba(56,189,248,0.06) 0%, transparent 60%);
-    transition: background-color 0.4s ease, color 0.4s ease;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
-
-  body.light-mode { background-image: none; }
 
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(124,106,255,0.15); border-radius: 6px; transition: background 0.2s; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(124,106,255,0.3); }
+  ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.2); border-radius: 3px; transition: background 0.2s; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.35); }
 
   @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
   .animate-in { animation: fadeIn 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
@@ -143,14 +144,14 @@
      3. HEADER & TOOLBAR
      ========================================================================== */
   .app-header {
-    flex-shrink: 0; padding: 16px 24px; display: flex; align-items: center; gap: 16px;
-    background: var(--bg-panel); backdrop-filter: blur(16px);
-    border-bottom: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-    z-index: 50; transition: background 0.4s; flex-wrap: wrap;
+    flex-shrink: 0; padding: 12px 20px; display: flex; align-items: center; gap: 16px;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    z-index: 50; transition: background 0.2s; flex-wrap: wrap;
   }
-  .app-header h1 { font-size: 16px; font-weight: 700; letter-spacing: -.01em; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; white-space: nowrap; margin-right: 12px; }
+  .app-header h1 { font-size: 16px; font-weight: 600; letter-spacing: -.01em; color: var(--text); white-space: nowrap; margin-right: 12px; }
 
-  .live-badge { font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 20px; letter-spacing: .05em; text-transform: uppercase; transition: all 0.3s ease; white-space: nowrap; }
+  .live-badge { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: var(--r-sm); letter-spacing: .04em; text-transform: uppercase; transition: all 0.2s ease; white-space: nowrap; }
   .live-badge.live { background: var(--green-dim); color: var(--green); border: 1px solid rgba(52,211,153,0.2); }
   .live-badge.cached { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(56,189,248,0.2); }
   .live-badge.none { background: rgba(255,255,255,0.04); color: var(--text-dim); border: 1px solid var(--border); }
@@ -244,14 +245,14 @@
   select.field-input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%238a9bb3' d='M5 7L0 2h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; cursor: pointer; }
   .field-label { font-size: 10px; font-weight: 600; color: var(--text-dim); letter-spacing: .05em; text-transform: uppercase; margin-bottom: 6px; white-space: nowrap; }
 
-  .autocomplete { position: absolute; top: calc(100% + 8px); left: 0; right: 0; background: var(--bg-card2); border: 1px solid var(--border-hi); border-radius: var(--r-md); z-index: 200; max-height: 240px; overflow-y: auto; box-shadow: var(--shadow-lg); }
-  .autocomplete-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background .2s; }
-  .autocomplete-item:hover { background: rgba(124,106,255,0.08); }
+  .autocomplete { position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: var(--bg-card2); border: 1px solid var(--border-hi); border-radius: var(--r-md); z-index: 200; max-height: 240px; overflow-y: auto; box-shadow: var(--shadow-lg); }
+  .autocomplete-item { width: 100%; background: transparent; border: none; text-align: left; font-family: inherit; display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background .15s; }
+  .autocomplete-item:hover, .autocomplete-item:focus-visible { background: rgba(59, 130, 246, 0.1); outline: none; }
   .ac-ticker { font-family: var(--mono); font-weight: 600; color: var(--purple2); font-size: 12px; min-width: 52px; }
   .ac-name   { color: var(--text); font-size: 12px; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
-  .ac-add    { font-size: 10px; font-weight: 600; color: var(--blue); padding: 3px 10px; background: var(--blue-dim); border-radius: 20px; flex-shrink: 0; transition: all 0.2s; }
+  .ac-add    { font-size: 10px; font-weight: 600; color: var(--blue); padding: 2px 8px; background: var(--blue-dim); border-radius: var(--r-sm); flex-shrink: 0; transition: background 0.15s, color 0.15s; }
   .ac-loading{ padding: 14px; text-align: center; font-size: 12px; color: var(--text-muted); font-weight: 500; }
-  .autocomplete-item:hover .ac-add { transform: scale(1.05); background: var(--blue); color: #fff; box-shadow: 0 2px 8px rgba(56,189,248,0.4); }
+  .autocomplete-item:hover .ac-add { background: var(--blue); color: #0b0f17; }
 
   /* ==========================================================================
      6. TABLES & PORTFOLIO INPUTS
@@ -284,20 +285,19 @@
   /* ==========================================================================
      7. BUTTONS & COMPONENTS
      ========================================================================== */
-  .btn { font-family: var(--sans); font-size: 12px; font-weight: 600; letter-spacing: .02em; padding: 10px 18px; border-radius: var(--r-sm); border: none; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; }
-  .btn:active:not(:disabled) { transform: scale(0.97); }
+  .btn { font-family: var(--sans); font-size: 12px; font-weight: 600; letter-spacing: .01em; padding: 9px 16px; border-radius: var(--r-sm); border: 1px solid transparent; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease; white-space: nowrap; }
   .btn:disabled { opacity: .4; cursor: not-allowed; }
 
-  .btn-amber { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #000; box-shadow: 0 2px 10px rgba(251,191,36,0.15); }
-  .btn-amber:hover:not(:disabled) { opacity: .95; box-shadow: 0 4px 14px rgba(251,191,36,0.3); transform: translateY(-1px); }
+  .btn-amber { background: var(--amber); color: #0b0f17; }
+  .btn-amber:hover:not(:disabled) { opacity: .9; }
 
-  .btn-blue { background: var(--grad-btn); color: #fff; box-shadow: 0 2px 10px rgba(99,102,241,0.2); }
-  .btn-blue:hover:not(:disabled) { opacity: .95; box-shadow: 0 4px 14px rgba(99,102,241,0.35); transform: translateY(-1px); }
+  .btn-blue { background: var(--purple); color: #fff; }
+  .btn-blue:hover:not(:disabled) { background: var(--purple2); }
 
-  .btn-ghost { background: rgba(255,255,255,0.04); border: 1px solid var(--border-hi); color: var(--text-dim); }
-  .btn-ghost:hover:not(:disabled) { background: rgba(255,255,255,0.08); color: var(--text); border-color: rgba(255,255,255,0.25); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+  .btn-ghost { background: transparent; border: 1px solid var(--border-hi); color: var(--text-dim); }
+  .btn-ghost:hover:not(:disabled) { background: var(--bg-card-hover); color: var(--text); border-color: var(--border-hi); }
   body.light-mode .btn-ghost { background: transparent; border-color: var(--border-hi); }
-  body.light-mode .btn-ghost:hover:not(:disabled) { background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.15); color: var(--text); }
+  body.light-mode .btn-ghost:hover:not(:disabled) { background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.2); color: var(--text); }
 
   .btn-full { width: 100%; display: block; text-align: center; }
 
@@ -342,29 +342,29 @@
   .pie-sym { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--text); min-width: 46px; }
   .pie-pct { font-size: 12px; color: var(--text-dim); }
 
-  .computing-overlay { position: absolute; inset: 0; background: var(--overlay-bg); backdrop-filter: blur(4px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; border-radius: var(--r-lg); z-index: 10; }
-  .cmp-label { font-size: 12px; font-weight: 600; color: var(--purple2); letter-spacing: .12em; text-transform: uppercase; }
+  .computing-overlay { position: absolute; inset: 0; background: var(--overlay-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; border-radius: var(--r-lg); z-index: 10; }
+  .cmp-label { font-size: 12px; font-weight: 600; color: var(--purple2); letter-spacing: .08em; text-transform: uppercase; }
 
   .spinner { width: 28px; height: 28px; border: 3px solid var(--border-hi); border-top-color: var(--purple); border-radius: 50%; animation: spin .75s cubic-bezier(0.5, 0.1, 0.4, 0.9) infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
   .tag-live, .tag-cached, .tag-sim {
-    font-size: 9px; padding: 3px 8px; border-radius: 20px; letter-spacing: .04em;
+    font-size: 9px; padding: 2px 6px; border-radius: var(--r-sm); letter-spacing: .04em;
     vertical-align: middle; border: 1px solid;
   }
-  .tag-live   { font-weight: 700; color: var(--green);      background: var(--green-dim);           border-color: rgba(52,211,153,0.2); }
-  .tag-cached { font-weight: 700; color: var(--blue);       background: var(--blue-dim);            border-color: rgba(56,189,248,0.2); }
+  .tag-live   { font-weight: 600; color: var(--green);      background: var(--green-dim);           border-color: rgba(16,185,129,0.25); }
+  .tag-cached { font-weight: 600; color: var(--blue);       background: var(--blue-dim);            border-color: rgba(56,189,248,0.25); }
   .tag-sim    { font-weight: 600; color: var(--text-muted); background: rgba(255,255,255,0.05);     border-color: var(--border); }
   body.light-mode .tag-sim { background: rgba(0,0,0,0.05); }
 
   .fetch-ind { display: inline-block; width: 10px; height: 10px; border: 2px solid var(--border-hi); border-top-color: var(--purple); border-radius: 50%; animation: spin .6s linear infinite; vertical-align: middle; }
 
-  .toast { position: fixed; bottom: 24px; right: 24px; z-index: 999; background: var(--bg-card2); border: 1px solid var(--border-hi); border-left: 4px solid var(--red); border-radius: var(--r-md); padding: 12px 18px; font-size: 13px; color: var(--text); font-weight: 500; max-width: 320px; box-shadow: var(--shadow-lg); animation: slideIn .35s ease; }
-  @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .toast { position: fixed; bottom: 24px; right: 24px; z-index: 999; background: var(--bg-card2); border: 1px solid var(--border-hi); border-left: 4px solid var(--red); border-radius: var(--r-md); padding: 12px 18px; font-size: 13px; color: var(--text); font-weight: 500; max-width: 320px; box-shadow: var(--shadow-lg); animation: slideIn .25s ease; }
+  @keyframes slideIn { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-  .corr-cell { border-radius: 4px; font-family: var(--mono); font-weight: 600; transition: transform 0.2s ease, z-index 0.2s ease; cursor: default; display: flex; align-items: center; justify-content: center; }
-  .corr-cell:hover { transform: scale(1.08); z-index: 5; box-shadow: 0 2px 8px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.25); }
-  body.light-mode .corr-cell:hover { border: 1px solid rgba(0,0,0,0.2); }
+  .corr-cell { border-radius: 4px; font-family: var(--mono); font-weight: 600; transition: border-color 0.15s ease; cursor: default; display: flex; align-items: center; justify-content: center; border: 1px solid transparent; }
+  .corr-cell:hover { border-color: rgba(255,255,255,0.35); }
+  body.light-mode .corr-cell:hover { border-color: rgba(0,0,0,0.3); }
 
   #btSummary, #ddSummary { background: transparent !important; border-bottom: 1px dashed var(--border-hi); }
   #savedPortfoliosList { display: flex; flex-direction: column; gap: 10px; max-height: 280px; overflow-y: auto; padding-right: 2px; }
@@ -448,7 +448,7 @@
         <div style="padding:8px 20px 16px;">
           <div class="alloc-bar"><div class="alloc-fill" id="allocFill"></div></div>
           <div class="alloc-row">
-            <span id="allocLabel">—</span>
+            <span id="allocLabel">--</span>
             <span id="allocTotal" class="font-semibold">0%</span>
           </div>
         </div>
@@ -479,15 +479,15 @@
       <div class="stats-grid" id="allocationStats" style="grid-template-columns:repeat(3,1fr); margin:0 20px 16px;">
         <div class="stat-cell" style="padding:10px;">
           <div class="stat-label">Expected Return</div>
-          <div class="stat-value pos" id="allocationReturn" style="font-size:15px;">—</div>
+          <div class="stat-value pos" id="allocationReturn" style="font-size:15px;">--</div>
         </div>
         <div class="stat-cell" style="padding:10px;">
           <div class="stat-label">Avg Drawdown</div>
-          <div class="stat-value" id="allocationDrawdown" style="font-size:15px; color:var(--red);">—</div>
+          <div class="stat-value" id="allocationDrawdown" style="font-size:15px; color:var(--red);">--</div>
         </div>
         <div class="stat-cell" style="padding:10px;">
           <div class="stat-label">Volatility</div>
-          <div class="stat-value amber" id="allocationVolatility" style="font-size:15px;">—</div>
+          <div class="stat-value amber" id="allocationVolatility" style="font-size:15px;">--</div>
         </div>
       </div>
     </div>
@@ -671,7 +671,7 @@
     <div class="panel flex-col" style="flex:1; min-height: 380px;">
       <div class="panel-head">
         <span class="panel-title">Monte Carlo Projections (Current Portfolio)</span>
-        <span id="mcSubtitle" class="font-mono text-muted font-medium" style="font-size:10px;">—</span>
+        <span id="mcSubtitle" class="font-mono text-muted font-medium" style="font-size:10px;">--</span>
       </div>
       <div class="panel-body flex-1" style="position:relative;">
         <div id="mcPlaceholder" class="chart-empty text-muted opacity-100 transition-opacity" style="font-size:13px;">
@@ -812,7 +812,7 @@ let btCustomEndDate = null;
 let dripEnabled = true;
 let RISK_FREE_RATE = 0.042;
 
-const PIE_COLORS = ['#34d399','#38bdf8','#7c6aff','#f87171','#fbbf24','#a78bfa','#06b6d4','#10b981','#fb923c','#e879f9'];
+const PIE_COLORS = ['#10b981','#38bdf8','#3b82f6','#ef4444','#f59e0b','#06b6d4','#14b8a6','#f97316','#6366f1','#ec4899'];
 
 const dom = {
     lightModeSwitch:             document.getElementById('lightModeSwitch'),
@@ -1267,7 +1267,7 @@ function renderSavedPortfolios() {
 
       <div class="flex gap-sm">
         <button class="btn btn-ghost flex-1" style="padding:4px 0; font-size:10px;" onclick="loadSavedPortfolio(${idx})">Load</button>
-        <button class="btn btn-ghost text-red" style="padding:4px 8px; font-size:10px;" onclick="deleteSavedPortfolio(${idx})">×</button>
+        <button class="btn btn-ghost text-red" style="padding:4px 8px; font-size:10px;" aria-label="Delete ${escHtml(ptf.name)}" onclick="deleteSavedPortfolio(${idx})">×</button>
       </div>
     </div>
   `).join('');
@@ -1347,7 +1347,7 @@ function renderPortfolio() {
         <td class="t-price">${priceHTML}</td>
         <td class="t-price" style="text-align:right;">${chgStr}</td>
         <td><input class="weight-input" type="number" min="0" max="100" step="0.1" value="${p.weight}" onchange="updateWeight('${p.symbol}',this.value)" onfocus="this.select()" /></td>
-        <td><button class="remove-btn" onclick="removeTicker('${p.symbol}')" title="Remove"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg></button></td>
+        <td><button class="remove-btn" onclick="removeTicker('${p.symbol}')" title="Remove ${p.symbol}" aria-label="Remove ${p.symbol}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg></button></td>
       </tr>`;
   }).join('');
 
@@ -1358,11 +1358,11 @@ function renderPortfolio() {
   document.getElementById('allocTotal').textContent = total.toFixed(2) + '%';
 
   if (Math.abs(total - 100) < 0.01) {
-    fill.style.background = 'var(--green)'; fill.style.boxShadow = '0 0 10px rgba(52,211,153,0.4)'; label.textContent = 'Fully allocated';
+    fill.style.background = 'var(--green)'; label.textContent = 'Fully allocated';
   } else if (total < 100) {
-    fill.style.background = 'var(--amber)'; fill.style.boxShadow = '0 0 10px rgba(251,191,36,0.4)'; label.textContent = `Under ${(100-total).toFixed(2)}%`;
+    fill.style.background = 'var(--amber)'; label.textContent = `Under ${(100-total).toFixed(2)}%`;
   } else {
-    fill.style.background = 'var(--red)'; fill.style.boxShadow = '0 0 10px rgba(248,113,113,0.4)'; label.textContent = `Over ${(total-100).toFixed(2)}%`;
+    fill.style.background = 'var(--red)'; label.textContent = `Over ${(total-100).toFixed(2)}%`;
   }
 }
 
@@ -1391,7 +1391,7 @@ function renderPie() {
       responsive: false, cutout: '68%',
       plugins: {
         legend: { display: false },
-        tooltip: { backgroundColor: getCssVar('--bg-card2'), borderColor: getCssVar('--border-hi'), borderWidth: 1, titleColor: '#a78bfa', bodyColor: getCssVar('--text'), cornerRadius: 8, padding: 12, callbacks: { label: ctx => ` ${ctx.parsed.toFixed(2)}%` } }
+        tooltip: { backgroundColor: getCssVar('--bg-card2'), borderColor: getCssVar('--border-hi'), borderWidth: 1, titleColor: getCssVar('--text'), bodyColor: getCssVar('--text'), cornerRadius: 6, padding: 10, callbacks: { label: ctx => ` ${ctx.parsed.toFixed(2)}%` } }
       }
     }
   });
@@ -2029,7 +2029,7 @@ async function renderBacktest() {
     }
 
     const managedLabel = `Managed Strategy (${document.getElementById('managedMetric').selectedOptions[0].text})${isLev ? ` (${levMul.toFixed(1)}x @ ${(bRate*100).toFixed(1)}%)` : ' (1x)'}`;
-    datasets.push({ label: managedLabel, data: managedCurve, borderColor: '#a78bfa', borderWidth: 2.5, borderDash: [5,4], pointRadius: 0, backgroundColor: 'transparent', tension: 0.1 });
+    datasets.push({ label: managedLabel, data: managedCurve, borderColor: '#38bdf8', borderWidth: 2.5, borderDash: [5,4], pointRadius: 0, backgroundColor: 'transparent', tension: 0.1 });
 
     let mPeak = -Infinity, mMaxDdVal = 0;
     const mDdCurve = managedCurve.map(val => {
@@ -2038,7 +2038,7 @@ async function renderBacktest() {
       if (dd < mMaxDdVal) mMaxDdVal = dd;
       return dd;
     });
-    ddDatasets.push({ label: managedLabel + ' DD', data: mDdCurve, borderColor: '#a78bfa', borderWidth: 1.5, borderDash: [5,4], pointRadius: 0, backgroundColor: 'transparent', tension: 0.1 });
+    ddDatasets.push({ label: managedLabel + ' DD', data: mDdCurve, borderColor: '#38bdf8', borderWidth: 1.5, borderDash: [5,4], pointRadius: 0, backgroundColor: 'transparent', tension: 0.1 });
 
     const mRetPct = ((managedCurve[managedCurve.length-1] - 10000) / 10000) * 100;
     let winRateHtml = '';
@@ -2219,9 +2219,9 @@ function runMonteCarlo() {
     mcChartInst = new Chart(document.getElementById('mcChart').getContext('2d'), {
       type: 'line',
       data: { labels, datasets: [
-        { label: '90th Percentile', data: p90Data, borderColor: '#34d399', borderWidth: 2.5, pointRadius: 3, backgroundColor: 'transparent', fill: false, tension: .4 },
-        { label: 'Median',          data: p50Data, borderColor: '#7c6aff', borderWidth: 3,   pointRadius: 3, backgroundColor: 'transparent', fill: false, tension: .4 },
-        { label: '10th Percentile', data: p10Data, borderColor: '#f87171', borderWidth: 2.5, pointRadius: 3, backgroundColor: 'transparent', fill: false, tension: .4 },
+        { label: '90th Percentile', data: p90Data, borderColor: '#10b981', borderWidth: 2.5, pointRadius: 3, backgroundColor: 'transparent', fill: false, tension: .4 },
+        { label: 'Median',          data: p50Data, borderColor: '#3b82f6', borderWidth: 3,   pointRadius: 3, backgroundColor: 'transparent', fill: false, tension: .4 },
+        { label: '10th Percentile', data: p10Data, borderColor: '#ef4444', borderWidth: 2.5, pointRadius: 3, backgroundColor: 'transparent', fill: false, tension: .4 },
       ]},
       options: {
         responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
@@ -2288,8 +2288,8 @@ function renderLocalAC(q) {
 function renderAC(results, q) {
   const ac = document.getElementById('autocomplete');
   ac.innerHTML = results.length
-    ? results.map(r => `<div class="autocomplete-item" onclick="addTicker('${escHtml(r.s)}','${escHtml(r.n)}')"><span class="ac-ticker">${escHtml(r.s)}</span><span class="ac-name">${escHtml(r.n)}</span><span class="ac-add">+ Add</span></div>`).join('')
-    : `<div class="autocomplete-item" onclick="addTicker('${escHtml(q.toUpperCase())}','${escHtml(q.toUpperCase())}')"><span class="ac-ticker">${escHtml(q.toUpperCase())}</span><span class="ac-name">Add as custom</span><span class="ac-add">+ Add</span></div>`;
+    ? results.map(r => `<button type="button" class="autocomplete-item" onclick="addTicker('${escHtml(r.s)}','${escHtml(r.n)}')"><span class="ac-ticker">${escHtml(r.s)}</span><span class="ac-name">${escHtml(r.n)}</span><span class="ac-add">+ Add</span></button>`).join('')
+    : `<button type="button" class="autocomplete-item" onclick="addTicker('${escHtml(q.toUpperCase())}','${escHtml(q.toUpperCase())}')"><span class="ac-ticker">${escHtml(q.toUpperCase())}</span><span class="ac-name">Add as custom</span><span class="ac-add">+ Add</span></button>`;
   ac.classList.remove('hidden');
 }
 
